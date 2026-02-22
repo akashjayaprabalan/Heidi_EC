@@ -141,7 +141,7 @@ const App: React.FC = () => {
           { id: 'settings', label: 'Settings', icon: 'settings' },
           { id: 'create', label: 'Create Report', icon: 'plus' },
           { id: 'view', label: 'View Reports', icon: 'search' },
-          { id: 'simulator', label: 'Economy Simulator', icon: 'trending-up' },
+          { id: 'simulator', label: 'Credit Monitor', icon: 'trending-up' },
           { id: 'ledger', label: 'Ledger', icon: 'file-text' },
         ].map(item => (
           <button
@@ -568,7 +568,7 @@ const App: React.FC = () => {
 
     return (
       <div className="p-8">
-        <h2 className="text-2xl font-bold mb-6 text-slate-800">Economy Monitor</h2>
+        <h2 className="text-2xl font-bold mb-6 text-slate-800">Credit Monitor</h2>
         
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden mb-8">
           <table className="w-full text-left text-sm">
