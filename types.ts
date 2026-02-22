@@ -5,7 +5,6 @@ export interface Clinic {
   id: string;
   name: string;
   username: string;
-  password?: string;
   optedIn: boolean;
   credits: number;
   reportsShared: number;

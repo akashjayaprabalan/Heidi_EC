@@ -87,6 +87,10 @@ const ANONYMIZED_LABEL_BY_CLINIC_ID = SEED_CLINICS.reduce<Record<string, string>
   return acc;
 }, {});
 
+function getSafePatientRef(patientId: string): string {
+  return `Patient Record ${patientId.toUpperCase()}`;
+}
+
 function toRecordById<T extends { id: string }>(items: readonly T[]): Record<string, T> {
   return items.reduce<Record<string, T>>((acc, item) => {
     acc[item.id] = item;
@@ -184,7 +188,10 @@ function LoginScreen({ clinics, onLogin }: LoginScreenProps) {
       </div>
 
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-6 text-slate-800">Clinic Sign-in</h2>
+        <h2 className="text-xl font-bold mb-2 text-slate-800">Demo Sign-in</h2>
+        <p className="text-sm text-slate-500 mb-6">
+          Choose a clinic identity by username. No passwords are stored in this client demo.
+        </p>
         <form onSubmit={onLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
@@ -192,16 +199,7 @@ function LoginScreen({ clinics, onLogin }: LoginScreenProps) {
               name="username"
               type="text"
               placeholder="e.g. harbour"
-              className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-            <input
-              name="password"
-              type="password"
-              placeholder="••••••••"
+              autoComplete="username"
               className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
               required
             />
@@ -217,7 +215,7 @@ function LoginScreen({ clinics, onLogin }: LoginScreenProps) {
             {clinics.map((clinic) => (
               <div key={clinic.id} className="text-[10px] flex justify-between bg-slate-50 p-2 rounded">
                 <span className="font-bold text-slate-600">{clinic.name}</span>
-                <span className="text-slate-400 font-mono">{clinic.username} / Heidi123!</span>
+                <span className="text-slate-400 font-mono">{clinic.username}</span>
               </div>
             ))}
           </div>
@@ -844,11 +842,9 @@ function App() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const username = String(formData.get('username') ?? '').trim();
-    const password = String(formData.get('password') ?? '');
-
-    const match = clinics.find((clinic) => clinic.username === username && (clinic as Clinic & { password?: string }).password === password);
+    const match = clinics.find((clinic) => clinic.username === username);
     if (!match) {
-      alert('Invalid credentials');
+      alert('Unknown clinic username');
       return;
     }
 
@@ -901,7 +897,10 @@ function App() {
         ...clinic,
         reportsShared: (clinic.reportsShared || 0) + 1,
       }));
-      addLedgerEntry(LedgerEventType.SHARE, `${currentUser.name} shared a ${input.tier} report for ${patient.name}`);
+      addLedgerEntry(
+        LedgerEventType.SHARE,
+        `${currentUser.name} shared a ${input.tier} report for ${getSafePatientRef(patient.id)}`,
+      );
       return;
     }
 
@@ -916,7 +915,7 @@ function App() {
 
     addLedgerEntry(
       LedgerEventType.BLOCKED,
-      `${currentUser.name} saved a ${input.tier} report for ${patient.name}. Network share blocked: ${reason}`,
+      `${currentUser.name} saved a ${input.tier} report for ${getSafePatientRef(patient.id)}. Network share blocked: ${reason}`,
     );
   };
 
@@ -962,8 +961,7 @@ function App() {
 
     addUnlockedReports([{ viewerClinicId: currentUser.id, reportId: report.id }]);
 
-    const patientName = PATIENT_BY_ID[report.patientId]?.name ?? 'Unknown Patient';
-    addLedgerEntry(LedgerEventType.VIEW, `${currentUser.name} viewed report for ${patientName}`);
+    addLedgerEntry(LedgerEventType.VIEW, `${currentUser.name} viewed report for ${getSafePatientRef(report.patientId)}`);
     addLedgerEntry(
       LedgerEventType.TRANSFER,
       `TRANSFER: -${VIEW_COST} from ${currentUser.name} → +${VIEW_COST} to ${ANONYMIZED_LABEL_BY_CLINIC_ID[report.authorClinicId] ?? 'Contributor'}`,

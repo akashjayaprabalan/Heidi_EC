@@ -5,11 +5,11 @@ export const INITIAL_CREDITS = 30;
 export const VIEW_COST = 10;
 
 export const SEED_CLINICS: Clinic[] = [
-  { id: 'c1', name: 'Harbour Physio', username: 'harbour', password: 'Heidi123!', optedIn: true, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
-  { id: 'c2', name: 'Peak Performance', username: 'peak', password: 'Heidi123!', optedIn: true, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
-  { id: 'c3', name: 'City Sports Rehab', username: 'city', password: 'Heidi123!', optedIn: false, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
-  { id: 'c4', name: 'Northside Physio', username: 'north', password: 'Heidi123!', optedIn: true, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
-  { id: 'c5', name: 'Bayside Movement', username: 'bayside', password: 'Heidi123!', optedIn: true, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
+  { id: 'c1', name: 'Harbour Physio', username: 'harbour', optedIn: true, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
+  { id: 'c2', name: 'Peak Performance', username: 'peak', optedIn: true, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
+  { id: 'c3', name: 'City Sports Rehab', username: 'city', optedIn: false, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
+  { id: 'c4', name: 'Northside Physio', username: 'north', optedIn: true, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
+  { id: 'c5', name: 'Bayside Movement', username: 'bayside', optedIn: true, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
 ];
 
 export const SEED_PATIENTS: Patient[] = [
