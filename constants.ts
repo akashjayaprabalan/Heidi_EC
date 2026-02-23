@@ -1,7 +1,7 @@
 
 import { Clinic, Patient, LedgerEventType } from './types';
 
-export const INITIAL_CREDITS = 30;
+export const INITIAL_CREDITS = 50;
 export const VIEW_COST = 10;
 
 export const SEED_CLINICS: Clinic[] = [
