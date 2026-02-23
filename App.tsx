@@ -41,6 +41,13 @@ const NAV_ITEMS: NavItem[] = [
 const REPORT_TIERS: ReportTier[] = ['Private', 'Summary', 'Full'];
 const MAX_SIMULATED_VIEWS = 5;
 const ACTIVE_TAB_DEFAULT: ActiveTab = 'settings';
+const DEMO_PASSWORDS: Record<string, string> = {
+  harbour: 'harbour123',
+  peak: 'peak123',
+  city: 'city123',
+  north: 'north123',
+  bayside: 'bayside123',
+};
 
 const SEEDED_REPORTS: Report[] = (() => {
   const now = Date.now();
@@ -183,14 +190,13 @@ function LoginScreen({ clinics, onLogin }: LoginScreenProps) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-900">
       <div className="mb-12 text-center">
-        <h1 className="text-4xl font-black text-white mb-2 tracking-tighter">Heidi Collective</h1>
-        <p className="text-slate-400 max-w-md">The "Give-to-Get" incentive system for competing clinics to share patient history safely.</p>
+        <h1 className="text-4xl font-black text-white mb-2 tracking-tighter">Kinetic</h1>
       </div>
 
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-2 text-slate-800">Demo Sign-in</h2>
-        <p className="text-sm text-slate-500 mb-6">
-          Choose a clinic identity by username. No passwords are stored in this client demo.
+        <h2 className="text-xl font-bold mb-2 text-slate-800 text-center">Demo Sign-in</h2>
+        <p className="text-sm text-slate-500 mb-6 text-center">
+          Choose a clinic identity with its demo username and password.
         </p>
         <form onSubmit={onLogin} className="space-y-4">
           <div>
@@ -204,6 +210,17 @@ function LoginScreen({ clinics, onLogin }: LoginScreenProps) {
               required
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+            <input
+              name="password"
+              type="password"
+              placeholder="Enter demo password"
+              autoComplete="current-password"
+              className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              required
+            />
+          </div>
           <button className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-all shadow-lg active:scale-95">
             Enter Network
           </button>
@@ -213,9 +230,14 @@ function LoginScreen({ clinics, onLogin }: LoginScreenProps) {
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Demo Access</h3>
           <div className="grid grid-cols-1 gap-2">
             {clinics.map((clinic) => (
-              <div key={clinic.id} className="text-[10px] flex justify-between bg-slate-50 p-2 rounded">
-                <span className="font-bold text-slate-600">{clinic.name}</span>
-                <span className="text-slate-400 font-mono">{clinic.username}</span>
+              <div key={clinic.id} className="text-[10px] flex items-center justify-between gap-3 bg-slate-50 p-2 rounded">
+                <div className="min-w-0">
+                  <div className="font-bold text-slate-600 truncate">{clinic.name}</div>
+                  <div className="text-slate-400 font-mono">u: {clinic.username}</div>
+                </div>
+                <div className="text-right font-mono text-slate-500">
+                  <div>p: {DEMO_PASSWORDS[clinic.username] ?? 'not-set'}</div>
+                </div>
               </div>
             ))}
           </div>
@@ -238,22 +260,22 @@ type KPIStripProps = {
 
 function KPIStrip({ optInCount, totalClinics, reportsCount, credits }: KPIStripProps) {
   return (
-    <div className="bg-slate-900 text-white p-4 flex flex-wrap items-center gap-6 text-sm">
+    <div className="bg-slate-900 text-white px-6 py-4 md:px-8 md:py-5 flex flex-wrap items-center gap-6 md:gap-10 text-sm md:text-base">
       <div className="flex flex-col">
-        <span className="text-slate-400 text-xs uppercase tracking-wider font-bold">Network Health</span>
-        <span className="font-semibold">{optInCount}/{totalClinics} Clinics Opted In</span>
+        <span className="text-slate-400 text-[11px] md:text-xs uppercase tracking-wider font-bold">Network Health</span>
+        <span className="font-semibold text-sm md:text-base">{optInCount}/{totalClinics} Clinics Opted In</span>
       </div>
       <div className="flex flex-col">
-        <span className="text-slate-400 text-xs uppercase tracking-wider font-bold">Volume</span>
-        <span className="font-semibold">{reportsCount} Reports Shared</span>
+        <span className="text-slate-400 text-[11px] md:text-xs uppercase tracking-wider font-bold">Volume</span>
+        <span className="font-semibold text-sm md:text-base">{reportsCount} Reports Shared</span>
       </div>
       <div className="flex flex-col">
-        <span className="text-slate-400 text-xs uppercase tracking-wider font-bold">Rule</span>
-        <span className="font-semibold italic">View cost: {VIEW_COST} → Transferred to Author</span>
+        <span className="text-slate-400 text-[11px] md:text-xs uppercase tracking-wider font-bold">Rule</span>
+        <span className="font-semibold italic text-sm md:text-base">View cost: {VIEW_COST} → Transferred to Author</span>
       </div>
       <div className="flex flex-col ml-auto">
-        <span className="text-slate-400 text-xs uppercase tracking-wider font-bold">Active Balance</span>
-        <span className={`font-bold text-lg ${credits < VIEW_COST ? 'text-red-400' : 'text-green-400'}`}>
+        <span className="text-slate-400 text-[11px] md:text-xs uppercase tracking-wider font-bold">Active Balance</span>
+        <span className={`font-bold text-xl md:text-2xl ${credits < VIEW_COST ? 'text-red-400' : 'text-green-400'}`}>
           {credits} Credits
         </span>
       </div>
@@ -269,13 +291,13 @@ type SidebarProps = {
 
 function Sidebar({ activeTab, onTabChange, onLogout }: SidebarProps) {
   return (
-    <div className="w-64 bg-white border-r h-[calc(100vh-140px)] sticky top-0">
-      <nav className="p-4 space-y-1">
+    <div className="w-72 lg:w-80 bg-white border-r min-h-[calc(100vh-88px)] sticky top-0">
+      <nav className="p-5 lg:p-6 space-y-2">
         {NAV_ITEMS.map((item) => (
           <button
             key={item.id}
             onClick={() => onTabChange(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+            className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl text-base font-medium transition-colors ${
               activeTab === item.id ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50'
             }`}
           >
@@ -283,10 +305,10 @@ function Sidebar({ activeTab, onTabChange, onLogout }: SidebarProps) {
             {item.label}
           </button>
         ))}
-        <div className="mt-8 pt-8 border-t">
+        <div className="mt-10 pt-8 border-t">
           <button
             onClick={onLogout}
-            className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            className="w-full text-left px-5 py-3 text-base text-red-500 hover:bg-red-50 rounded-xl transition-colors"
           >
             Switch Clinic (Demo Logout)
           </button>
@@ -303,18 +325,18 @@ type SettingsTabProps = {
 
 function SettingsTab({ currentUser, onToggleOptIn }: SettingsTabProps) {
   return (
-    <div className="p-8 max-w-2xl">
-      <h2 className="text-2xl font-bold mb-6">Clinic Settings</h2>
+    <div className="p-6 md:p-8 lg:p-10 max-w-5xl">
+      <h2 className="text-3xl lg:text-4xl font-bold mb-8">Clinic Settings</h2>
 
-      <div className="bg-white rounded-xl border p-6 shadow-sm mb-8">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-white rounded-2xl border p-6 lg:p-8 shadow-sm mb-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
           <div>
-            <h3 className="font-semibold text-lg">Participation Status</h3>
-            <p className="text-sm text-slate-500">Enable network sharing and viewing</p>
+            <h3 className="font-semibold text-xl lg:text-2xl">Participation Status</h3>
+            <p className="text-base text-slate-500">Enable network sharing and viewing</p>
           </div>
           <button
             onClick={onToggleOptIn}
-            className={`px-6 py-2 rounded-full font-bold transition-all ${
+            className={`px-8 py-3 rounded-full font-bold text-base lg:text-lg transition-all ${
               currentUser.optedIn
                 ? 'bg-green-100 text-green-700 hover:bg-green-200'
                 : 'bg-red-100 text-red-700 hover:bg-red-200'
@@ -324,17 +346,17 @@ function SettingsTab({ currentUser, onToggleOptIn }: SettingsTabProps) {
           </button>
         </div>
 
-        <div className="space-y-4 text-sm text-slate-600">
-          <div className="flex gap-3">
-            <div className="h-5 w-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-xs font-bold">1</div>
+        <div className="space-y-5 text-base text-slate-600 leading-relaxed">
+          <div className="flex gap-4">
+            <div className="h-7 w-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-sm font-bold">1</div>
             <p>View costs <strong>10 credits</strong>, which are transferred directly to the report's author clinic.</p>
           </div>
-          <div className="flex gap-3">
-            <div className="h-5 w-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-xs font-bold">2</div>
-            <p>Clinics that only consume will run out after 5 views (30 initial credits / 10 cost).</p>
+          <div className="flex gap-4">
+            <div className="h-7 w-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-sm font-bold">2</div>
+            <p>Clinics that only consume will run out after 5 views ({INITIAL_CREDITS} initial credits / 10 cost).</p>
           </div>
-          <div className="flex gap-3">
-            <div className="h-5 w-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-xs font-bold">3</div>
+          <div className="flex gap-4">
+            <div className="h-7 w-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-sm font-bold">3</div>
             <p>Judgement-safe: Origins are shown as <strong>Contributor #XX</strong>. Private notes are never shared.</p>
           </div>
         </div>
@@ -384,14 +406,14 @@ function CreateReportTab({ currentUser, patients, patientById, reports, onCreate
   };
 
   return (
-    <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="p-6 md:p-8 lg:p-10 grid grid-cols-1 xl:grid-cols-2 gap-8 lg:gap-10">
       <div>
-        <h2 className="text-2xl font-bold mb-6">Record Visit</h2>
-        <form onSubmit={handleSave} className="bg-white rounded-xl border p-6 shadow-sm space-y-4">
+        <h2 className="text-3xl lg:text-4xl font-bold mb-8 text-slate-800">Record Visit</h2>
+        <form onSubmit={handleSave} className="bg-white rounded-2xl border p-6 lg:p-8 shadow-sm space-y-5">
           <div>
-            <label className="block text-sm font-medium mb-1">Patient</label>
+            <label className="block text-base font-semibold mb-2">Patient</label>
             <select
-              className="w-full border rounded-lg p-2 bg-slate-50"
+              className="w-full border rounded-xl p-3 lg:p-4 bg-slate-50 text-base"
               value={selectedPatientId}
               onChange={(e) => setSelectedPatientId(e.target.value)}
               required
@@ -405,14 +427,14 @@ function CreateReportTab({ currentUser, patients, patientById, reports, onCreate
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Sharing Tier</label>
-            <div className="grid grid-cols-3 gap-2">
+            <label className="block text-base font-semibold mb-2">Sharing Tier</label>
+            <div className="grid grid-cols-3 gap-3">
               {REPORT_TIERS.map((reportTier) => (
                 <button
                   key={reportTier}
                   type="button"
                   onClick={() => setTier(reportTier)}
-                  className={`p-2 text-sm font-medium border rounded-lg transition-colors ${
+                  className={`p-3 text-sm lg:text-base font-semibold border rounded-xl transition-colors ${
                     tier === reportTier ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-600'
                   }`}
                 >
@@ -422,9 +444,9 @@ function CreateReportTab({ currentUser, patients, patientById, reports, onCreate
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Visit Notes</label>
+            <label className="block text-base font-semibold mb-2">Visit Notes</label>
             <textarea
-              className="w-full border rounded-lg p-2 h-32 bg-slate-50"
+              className="w-full border rounded-xl p-3 lg:p-4 h-40 bg-slate-50 text-base"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Clinical notes..."
@@ -433,7 +455,7 @@ function CreateReportTab({ currentUser, patients, patientById, reports, onCreate
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full bg-blue-600 text-white font-bold text-base py-3.5 rounded-xl hover:bg-blue-700 transition-colors"
           >
             Save Report
           </button>
@@ -441,29 +463,29 @@ function CreateReportTab({ currentUser, patients, patientById, reports, onCreate
       </div>
 
       <div>
-        <h2 className="text-2xl font-bold mb-6">Clinic History</h2>
-        <div className="space-y-4">
-          <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider">My Local Reports</h3>
+        <h2 className="text-3xl lg:text-4xl font-bold mb-8 text-slate-800">Clinic History</h2>
+        <div className="space-y-5">
+          <h3 className="text-sm lg:text-base font-bold uppercase text-slate-400 tracking-wider">My Local Reports</h3>
           {myReports.length === 0 ? (
-            <p className="text-slate-500 italic text-sm">No reports saved yet.</p>
+            <p className="text-slate-500 italic text-base">No reports saved yet.</p>
           ) : (
             myReports.map((report) => {
               const patient = patientById[report.patientId];
               const isShared = currentUser.optedIn && patient?.consent && report.tier !== 'Private';
 
               return (
-                <div key={report.id} className="bg-white border rounded-lg p-4 flex justify-between items-center shadow-sm">
+                <div key={report.id} className="bg-white border rounded-xl p-5 lg:p-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 shadow-sm">
                   <div>
-                    <div className="font-semibold text-slate-800">{patient?.name}</div>
-                    <div className="text-xs text-slate-500">{new Date(report.timestamp).toLocaleString()}</div>
+                    <div className="font-semibold text-lg text-slate-800">{patient?.name}</div>
+                    <div className="text-sm text-slate-500">{new Date(report.timestamp).toLocaleString()}</div>
                   </div>
-                  <div className="flex gap-2 items-center">
-                    <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${
+                  <div className="flex gap-2 items-center flex-wrap">
+                    <span className={`text-xs px-3 py-1.5 rounded-md font-bold uppercase ${
                       report.tier === 'Private' ? 'bg-slate-100 text-slate-600' : 'bg-blue-100 text-blue-700'
                     }`}>
                       {report.tier}
                     </span>
-                    <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${
+                    <span className={`text-xs px-3 py-1.5 rounded-md font-bold uppercase ${
                       isShared ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                     }`}>
                       {isShared ? 'Shared' : 'Private'}
@@ -508,13 +530,13 @@ function ViewReportsTab({ currentUser, reports, patients, patientById, unlockedS
   }, [searchPatientId, reports, patientById, currentUser.id]);
 
   return (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold mb-6 text-slate-800">Request Patient History</h2>
-      <div className="bg-white rounded-xl border p-6 shadow-sm mb-8 flex gap-4 items-end">
+    <div className="p-6 md:p-8 lg:p-10 max-w-6xl">
+      <h2 className="text-3xl lg:text-4xl font-bold mb-8 text-slate-800">Request Patient History</h2>
+      <div className="bg-white rounded-2xl border p-6 lg:p-8 shadow-sm mb-8 flex flex-col lg:flex-row gap-4 lg:gap-6 lg:items-end">
         <div className="flex-1">
-          <label className="block text-sm font-medium mb-1">Search Patient</label>
+          <label className="block text-base font-semibold mb-2">Search Patient</label>
           <select
-            className="w-full border rounded-lg p-2 bg-slate-50"
+            className="w-full border rounded-xl p-3 lg:p-4 bg-slate-50 text-base"
             value={searchPatientId}
             onChange={(e) => setSearchPatientId(e.target.value)}
           >
@@ -524,15 +546,15 @@ function ViewReportsTab({ currentUser, reports, patients, patientById, unlockedS
             ))}
           </select>
         </div>
-        <div className="bg-slate-50 px-4 py-2 border rounded-lg text-sm text-slate-500">
+        <div className="bg-slate-50 px-5 py-3 border rounded-xl text-base text-slate-500 whitespace-nowrap">
           {availableReports.length} External Reports Available
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         {searchPatientId && availableReports.length === 0 && (
-          <div className="text-center py-12 bg-white border rounded-xl border-dashed">
-            <p className="text-slate-400">No external shared reports found for this patient.</p>
+          <div className="text-center py-16 bg-white border rounded-2xl border-dashed">
+            <p className="text-slate-400 text-lg">No external shared reports found for this patient.</p>
           </div>
         )}
 
@@ -541,30 +563,30 @@ function ViewReportsTab({ currentUser, reports, patients, patientById, unlockedS
           const canAfford = currentUser.credits >= VIEW_COST;
 
           return (
-            <div key={report.id} className="bg-white rounded-xl border shadow-sm overflow-hidden">
-              <div className="p-4 bg-slate-50 border-b flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-slate-700">{ANONYMIZED_LABEL_BY_CLINIC_ID[report.authorClinicId] ?? 'Contributor'}</span>
+            <div key={report.id} className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+              <div className="p-5 lg:p-6 bg-slate-50 border-b flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-base lg:text-lg text-slate-700">{ANONYMIZED_LABEL_BY_CLINIC_ID[report.authorClinicId] ?? 'Contributor'}</span>
                   <span className="text-xs text-slate-400">•</span>
-                  <span className="text-xs text-slate-400">{new Date(report.timestamp).toLocaleDateString()}</span>
+                  <span className="text-sm text-slate-400">{new Date(report.timestamp).toLocaleDateString()}</span>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${
+                <span className={`text-xs md:text-sm px-3 py-1.5 rounded-md font-bold uppercase ${
                   report.tier === 'Full' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
                 }`}>
                   {report.tier} Tier Available
                 </span>
               </div>
-              <div className="p-6">
+              <div className="p-6 lg:p-8">
                 {!isUnlocked ? (
-                  <div className="flex flex-col items-center justify-center py-4 space-y-4">
+                  <div className="flex flex-col items-center justify-center py-8 space-y-5">
                     <div className="flex items-center gap-2 text-slate-400">
                       <Icon name="lock" />
-                      <span className="text-sm font-medium">Content Redacted</span>
+                      <span className="text-base font-medium">Content Redacted</span>
                     </div>
                     <button
                       disabled={!canAfford || !currentUser.optedIn}
                       onClick={() => onViewReport(report)}
-                      className={`px-8 py-3 rounded-lg font-bold transition-all shadow-md ${
+                      className={`px-10 py-4 rounded-xl text-base font-bold transition-all shadow-md ${
                         canAfford && currentUser.optedIn
                           ? 'bg-blue-600 text-white hover:bg-blue-700'
                           : 'bg-slate-200 text-slate-400 cursor-not-allowed'
@@ -573,31 +595,31 @@ function ViewReportsTab({ currentUser, reports, patients, patientById, unlockedS
                       Unlock Report (Cost {VIEW_COST} Credits)
                     </button>
                     {!currentUser.optedIn && (
-                      <p className="text-xs text-red-500 font-semibold">You are Opted Out</p>
+                      <p className="text-sm text-red-500 font-semibold">You are Opted Out</p>
                     )}
                     {currentUser.optedIn && !canAfford && (
-                      <p className="text-xs text-red-500 font-semibold italic">Insufficient Credits ({currentUser.credits})</p>
+                      <p className="text-sm text-red-500 font-semibold italic">Insufficient Credits ({currentUser.credits})</p>
                     )}
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     <div>
-                      <h4 className="text-xs font-bold uppercase text-slate-400 mb-2 tracking-widest">Continuity Summary</h4>
-                      <div className="bg-blue-50/50 p-4 rounded border border-blue-100 text-slate-700 leading-relaxed italic">
+                      <h4 className="text-sm font-bold uppercase text-slate-400 mb-2 tracking-widest">Continuity Summary</h4>
+                      <div className="bg-blue-50/50 p-5 rounded-xl border border-blue-100 text-slate-700 text-base leading-relaxed italic">
                         &quot;{report.tier === 'Summary' ? report.notes : `${report.notes.slice(0, 100)}...`}&quot;
                       </div>
                     </div>
 
                     {report.tier === 'Full' && (
                       <div>
-                        <h4 className="text-xs font-bold uppercase text-slate-400 mb-2 tracking-widest">Full Treatment Detail</h4>
-                        <div className="p-4 rounded border bg-slate-50 text-slate-800 leading-relaxed">
+                        <h4 className="text-sm font-bold uppercase text-slate-400 mb-2 tracking-widest">Full Treatment Detail</h4>
+                        <div className="p-5 rounded-xl border bg-slate-50 text-slate-800 text-base leading-relaxed">
                           {report.notes}
                         </div>
                       </div>
                     )}
 
-                    <div className="pt-4 border-t flex items-center justify-between text-[10px] text-slate-400 uppercase font-bold tracking-tighter">
+                    <div className="pt-4 border-t flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-xs text-slate-400 uppercase font-bold tracking-wide">
                       <span>Unlocked Content</span>
                       <span className="text-blue-500 italic">Judgement-Safe: Standardized summary, origin hidden.</span>
                     </div>
@@ -621,19 +643,19 @@ type EconomySimulatorTabProps = {
 
 function EconomySimulatorTab({ currentUser, clinics, onSimulateConsumeOnly, onSimulateOthersViewMe }: EconomySimulatorTabProps) {
   return (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold mb-6 text-slate-800">Credit Monitor</h2>
+    <div className="p-6 md:p-8 lg:p-10 max-w-6xl">
+      <h2 className="text-3xl lg:text-4xl font-bold mb-8 text-slate-800">Credit Monitor</h2>
 
-      <div className="bg-white rounded-xl border shadow-sm overflow-hidden mb-8">
-        <table className="w-full text-left text-sm">
+      <div className="bg-white rounded-2xl border shadow-sm overflow-hidden mb-8 overflow-x-auto">
+        <table className="w-full min-w-[760px] text-left text-base">
           <thead className="bg-slate-50 border-b text-slate-500 uppercase text-xs">
             <tr>
-              <th className="px-6 py-4 font-bold">Clinic</th>
-              <th className="px-6 py-4 font-bold">Status</th>
-              <th className="px-6 py-4 font-bold">Credits</th>
-              <th className="px-6 py-4 font-bold text-center">Shared</th>
-              <th className="px-6 py-4 font-bold text-center">Viewed</th>
-              <th className="px-6 py-4 font-bold">Net</th>
+              <th className="px-6 py-4 lg:py-5 font-bold">Clinic</th>
+              <th className="px-6 py-4 lg:py-5 font-bold">Status</th>
+              <th className="px-6 py-4 lg:py-5 font-bold">Credits</th>
+              <th className="px-6 py-4 lg:py-5 font-bold text-center">Shared</th>
+              <th className="px-6 py-4 lg:py-5 font-bold text-center">Viewed</th>
+              <th className="px-6 py-4 lg:py-5 font-bold">Net</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -642,18 +664,18 @@ function EconomySimulatorTab({ currentUser, clinics, onSimulateConsumeOnly, onSi
 
               return (
                 <tr key={clinic.id} className={clinic.id === currentUser.id ? 'bg-blue-50/50' : ''}>
-                  <td className="px-6 py-4 font-medium text-slate-900">{clinic.name} {clinic.id === currentUser.id ? '(Me)' : ''}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                  <td className="px-6 py-5 font-medium text-slate-900">{clinic.name} {clinic.id === currentUser.id ? '(Me)' : ''}</td>
+                  <td className="px-6 py-5">
+                    <span className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase ${
                       clinic.optedIn ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                     }`}>
                       {clinic.optedIn ? 'In' : 'Out'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 font-bold">{clinic.credits}</td>
-                  <td className="px-6 py-4 text-center">{clinic.reportsShared || 0}</td>
-                  <td className="px-6 py-4 text-center">{clinic.reportsViewed || 0}</td>
-                  <td className={`px-6 py-4 font-bold ${net > 0 ? 'text-green-600' : net < 0 ? 'text-red-500' : 'text-slate-400'}`}>
+                  <td className="px-6 py-5 font-bold text-lg">{clinic.credits}</td>
+                  <td className="px-6 py-5 text-center">{clinic.reportsShared || 0}</td>
+                  <td className="px-6 py-5 text-center">{clinic.reportsViewed || 0}</td>
+                  <td className={`px-6 py-5 font-bold ${net > 0 ? 'text-green-600' : net < 0 ? 'text-red-500' : 'text-slate-400'}`}>
                     {net > 0 ? '+' : ''}{net}
                   </td>
                 </tr>
@@ -663,29 +685,29 @@ function EconomySimulatorTab({ currentUser, clinics, onSimulateConsumeOnly, onSi
         </table>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border p-6 shadow-sm">
-          <h3 className="font-bold text-lg mb-2">Consume Action</h3>
-          <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+        <div className="bg-white rounded-2xl border p-6 lg:p-8 shadow-sm">
+          <h3 className="font-bold text-xl lg:text-2xl mb-3 text-slate-800">Consume Action</h3>
+          <p className="text-base text-slate-500 mb-6 leading-relaxed">
             Simulate the drain of your credits by viewing multiple external reports.
             This demonstrates how a clinic that doesn't share eventually hits the credit floor.
           </p>
           <button
             onClick={onSimulateConsumeOnly}
-            className="w-full bg-slate-100 text-slate-700 font-bold py-3 rounded-lg hover:bg-slate-200 transition-colors"
+            className="w-full bg-slate-100 text-slate-700 font-bold text-base py-3.5 rounded-xl hover:bg-slate-200 transition-colors"
           >
             Simulate 5 Views (Consume-only)
           </button>
         </div>
-        <div className="bg-white rounded-xl border p-6 shadow-sm">
-          <h3 className="font-bold text-lg mb-2">Earning Action</h3>
-          <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+        <div className="bg-white rounded-2xl border p-6 lg:p-8 shadow-sm">
+          <h3 className="font-bold text-xl lg:text-2xl mb-3 text-slate-800">Earning Action</h3>
+          <p className="text-base text-slate-500 mb-6 leading-relaxed">
             Simulate another clinic viewing one of your shared reports.
             This demonstrates how contribution sustains your ability to access data.
           </p>
           <button
             onClick={onSimulateOthersViewMe}
-            className="w-full bg-blue-100 text-blue-700 font-bold py-3 rounded-lg hover:bg-blue-200 transition-colors"
+            className="w-full bg-blue-100 text-blue-700 font-bold text-base py-3.5 rounded-xl hover:bg-blue-200 transition-colors"
           >
             Simulate Others Viewing My Report
           </button>
@@ -701,34 +723,34 @@ type LedgerTabProps = {
 
 function LedgerTab({ ledger }: LedgerTabProps) {
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-slate-800">Ledger Log</h2>
-        <div className="bg-white border rounded-lg p-4 max-w-sm text-[10px] leading-snug text-slate-500">
+    <div className="p-6 md:p-8 lg:p-10">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <h2 className="text-3xl lg:text-4xl font-bold text-slate-800">Ledger Log</h2>
+        <div className="bg-white border rounded-2xl p-5 max-w-md text-sm leading-snug text-slate-500">
           <div className="font-bold uppercase text-slate-400 mb-1">Incentive Rules</div>
-          • Start: 30 credits per clinic<br />
+          • Start: {INITIAL_CREDITS} credits per clinic<br />
           • View: 10 cost (transferred to author)<br />
           • Requirement: Opt-in + Patient Consent
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border shadow-sm overflow-hidden overflow-y-auto max-h-[600px]">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-slate-50 border-b text-slate-500 uppercase">
+      <div className="bg-white rounded-2xl border shadow-sm overflow-hidden overflow-y-auto max-h-[700px]">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-slate-50 border-b text-slate-500 uppercase text-xs">
             <tr>
-              <th className="px-6 py-3">Timestamp</th>
-              <th className="px-6 py-3">Event</th>
-              <th className="px-6 py-3">Details</th>
+              <th className="px-6 py-4">Timestamp</th>
+              <th className="px-6 py-4">Event</th>
+              <th className="px-6 py-4">Details</th>
             </tr>
           </thead>
           <tbody className="divide-y">
             {ledger.map((entry) => (
               <tr key={entry.id} className="hover:bg-slate-50/80 transition-colors">
-                <td className="px-6 py-4 text-slate-400 whitespace-nowrap">
+                <td className="px-6 py-5 text-slate-400 whitespace-nowrap align-top">
                   {new Date(entry.timestamp).toLocaleTimeString()}
                 </td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded-full font-black text-[9px] ${
+                <td className="px-6 py-5 align-top">
+                  <span className={`px-3 py-1.5 rounded-full font-black text-[10px] ${
                     entry.type === LedgerEventType.TRANSFER
                       ? 'bg-green-100 text-green-700'
                       : entry.type === LedgerEventType.BLOCKED
@@ -740,12 +762,12 @@ function LedgerTab({ ledger }: LedgerTabProps) {
                     {entry.type}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-slate-700 font-medium">{entry.message}</td>
+                <td className="px-6 py-5 text-slate-700 font-medium leading-relaxed">{entry.message}</td>
               </tr>
             ))}
             {ledger.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-6 py-12 text-center text-slate-400 italic">
+                <td colSpan={3} className="px-6 py-14 text-center text-slate-400 italic text-base">
                   No ledger events recorded yet.
                 </td>
               </tr>
@@ -774,11 +796,6 @@ function App() {
   );
 
   const currentUser = currentUserId ? clinicById[currentUserId] ?? null : null;
-
-  const optInCount = useMemo(
-    () => clinics.reduce((count, clinic) => count + (clinic.optedIn ? 1 : 0), 0),
-    [clinics],
-  );
 
   const unlockedSet = useMemo(() => {
     return unlockedReports.reduce<Set<string>>((set, unlocked) => {
@@ -842,9 +859,15 @@ function App() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const username = String(formData.get('username') ?? '').trim();
+    const password = String(formData.get('password') ?? '');
     const match = clinics.find((clinic) => clinic.username === username);
     if (!match) {
       alert('Unknown clinic username');
+      return;
+    }
+    const expectedPassword = DEMO_PASSWORDS[match.username];
+    if (!expectedPassword || password !== expectedPassword) {
+      alert('Incorrect password');
       return;
     }
 
@@ -1093,38 +1116,31 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="bg-white border-b px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-black text-xs">H</div>
-          <h1 className="text-lg font-black tracking-tight text-slate-800">Heidi Collective</h1>
-        </div>
+      <header className="bg-white border-b px-6 md:px-8 lg:px-10 py-4 lg:py-5 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-sm">K</div>
+          <h1 className="text-xl lg:text-2xl font-black tracking-tight text-slate-800">Kinetic</h1>
+        </div>
+        <div className="flex items-center gap-5">
           <div className="text-right">
-            <div className="text-sm font-bold text-slate-800">{currentUser.name}</div>
-            <div className={`text-[10px] font-black uppercase ${currentUser.optedIn ? 'text-green-600' : 'text-red-500'}`}>
+            <div className="text-base lg:text-lg font-bold text-slate-800">{currentUser.name}</div>
+            <div className={`text-xs font-black uppercase tracking-wide ${currentUser.optedIn ? 'text-green-600' : 'text-red-500'}`}>
               {currentUser.optedIn ? 'Network Active' : 'Network Off'}
             </div>
           </div>
-          <div className="h-10 w-px bg-slate-100" />
+          <div className="h-12 w-px bg-slate-100" />
           <div className="flex flex-col items-center">
-            <span className="text-[10px] uppercase font-bold text-slate-400">Balance</span>
-            <span className={`text-lg font-black leading-none ${currentUser.credits < VIEW_COST ? 'text-red-500' : 'text-blue-600'}`}>
+            <span className="text-xs uppercase font-bold tracking-wide text-slate-400">Balance</span>
+            <span className={`text-2xl font-black leading-none ${currentUser.credits < VIEW_COST ? 'text-red-500' : 'text-blue-600'}`}>
               {currentUser.credits}
             </span>
           </div>
         </div>
       </header>
 
-      <KPIStrip
-        optInCount={optInCount}
-        totalClinics={clinics.length}
-        reportsCount={reports.length}
-        credits={currentUser.credits}
-      />
-
       <main className="flex flex-1">
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} onLogout={handleLogout} />
-        <div className="flex-1 bg-slate-50/50 min-h-[calc(100vh-140px)]">
+        <div className="flex-1 bg-slate-50/50 min-h-[calc(100vh-88px)] overflow-x-auto">
           {activeTab === 'settings' && (
             <SettingsTab currentUser={currentUser} onToggleOptIn={handleToggleOptIn} />
           )}
