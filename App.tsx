@@ -32,7 +32,7 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'settings', label: 'Settings', icon: 'settings' },
-  { id: 'create', label: 'Create Report', icon: 'plus' },
+  { id: 'create', label: 'My Reports', icon: 'plus' },
   { id: 'view', label: 'View Reports', icon: 'search' },
   { id: 'simulator', label: 'Credit Monitor', icon: 'trending-up' },
   { id: 'ledger', label: 'Ledger', icon: 'file-text' },
