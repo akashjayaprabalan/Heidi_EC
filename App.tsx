@@ -325,18 +325,42 @@ type SettingsTabProps = {
 
 function SettingsTab({ currentUser, onToggleOptIn }: SettingsTabProps) {
   return (
-    <div className="p-6 md:p-8 lg:p-10 max-w-5xl">
+    <div className="p-6 md:p-8 lg:p-10 w-full min-h-[calc(100vh-88px)] flex flex-col">
       <h2 className="text-3xl lg:text-4xl font-bold mb-8">Clinic Settings</h2>
 
-      <div className="bg-white rounded-2xl border p-6 lg:p-8 shadow-sm mb-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
-          <div>
-            <h3 className="font-semibold text-xl lg:text-2xl">Participation Status</h3>
-            <p className="text-base text-slate-500">Enable network sharing and viewing</p>
+      <div className="flex-1 flex flex-col">
+        <div className="bg-white rounded-2xl border shadow-sm p-8 md:p-10 lg:p-14">
+          <div className="mb-10 lg:mb-12">
+            <h3 className="font-semibold text-4xl md:text-5xl lg:text-6xl leading-tight">Participation Status</h3>
+            <p className="mt-3 text-2xl md:text-3xl text-slate-500 leading-tight">Enable network sharing and viewing</p>
           </div>
+
+          <div className="space-y-8 lg:space-y-10 text-2xl lg:text-3xl text-slate-600 leading-snug">
+            <div className="flex gap-5 lg:gap-6 items-start">
+              <div className="h-12 w-12 lg:h-14 lg:w-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-xl lg:text-2xl font-bold">1</div>
+              <p>View costs <strong>10 credits</strong>, which are transferred directly to the report&apos;s author clinic.</p>
+            </div>
+            <div className="flex gap-5 lg:gap-6 items-start">
+              <div className="h-12 w-12 lg:h-14 lg:w-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-xl lg:text-2xl font-bold">2</div>
+              <p>Clinics that only consume will run out after 5 views ({INITIAL_CREDITS} initial credits / 10 cost).</p>
+            </div>
+            <div className="flex gap-5 lg:gap-6 items-start">
+              <div className="h-12 w-12 lg:h-14 lg:w-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-xl lg:text-2xl font-bold">3</div>
+              <p>Judgement-safe: Origins are shown as <strong>Contributor #XX</strong>. Private notes are never shared.</p>
+            </div>
+          </div>
+        </div>
+
+        {!currentUser.optedIn && (
+          <div className="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800 text-sm">
+            <strong>Action Blocked:</strong> While opted out, you cannot view network reports or share your own reports to the Collective.
+          </div>
+        )}
+
+        <div className="mt-auto pt-8 flex justify-center">
           <button
             onClick={onToggleOptIn}
-            className={`px-8 py-3 rounded-full font-bold text-base lg:text-lg transition-all ${
+            className={`px-10 lg:px-14 py-4 lg:py-5 rounded-full font-bold text-xl lg:text-2xl tracking-wide transition-all ${
               currentUser.optedIn
                 ? 'bg-green-100 text-green-700 hover:bg-green-200'
                 : 'bg-red-100 text-red-700 hover:bg-red-200'
@@ -345,28 +369,7 @@ function SettingsTab({ currentUser, onToggleOptIn }: SettingsTabProps) {
             {currentUser.optedIn ? 'OPTED IN' : 'OPTED OUT'}
           </button>
         </div>
-
-        <div className="space-y-5 text-base text-slate-600 leading-relaxed">
-          <div className="flex gap-4">
-            <div className="h-7 w-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-sm font-bold">1</div>
-            <p>View costs <strong>10 credits</strong>, which are transferred directly to the report's author clinic.</p>
-          </div>
-          <div className="flex gap-4">
-            <div className="h-7 w-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-sm font-bold">2</div>
-            <p>Clinics that only consume will run out after 5 views ({INITIAL_CREDITS} initial credits / 10 cost).</p>
-          </div>
-          <div className="flex gap-4">
-            <div className="h-7 w-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-sm font-bold">3</div>
-            <p>Judgement-safe: Origins are shown as <strong>Contributor #XX</strong>. Private notes are never shared.</p>
-          </div>
-        </div>
       </div>
-
-      {!currentUser.optedIn && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800 text-sm">
-          <strong>Action Blocked:</strong> While opted out, you cannot view network reports or share your own reports to the Collective.
-        </div>
-      )}
     </div>
   );
 }
