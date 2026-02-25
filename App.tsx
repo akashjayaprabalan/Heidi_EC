@@ -15,8 +15,8 @@ import {
   INITIAL_CREDITS,
 } from './constants';
 
-type ActiveTab = 'settings' | 'create' | 'view' | 'simulator' | 'ledger';
-type IconName = 'settings' | 'plus' | 'search' | 'trending-up' | 'file-text' | 'lock';
+type ActiveTab = 'settings' | 'create' | 'view' | 'ledger';
+type IconName = 'settings' | 'plus' | 'search' | 'file-text' | 'lock';
 
 type CreateReportInput = {
   patientId: string;
@@ -37,7 +37,6 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'settings', label: 'Settings', icon: 'settings' },
   { id: 'create', label: 'My Reports', icon: 'plus' },
   { id: 'view', label: 'View Reports', icon: 'search' },
-  { id: 'simulator', label: 'Credit Monitor', icon: 'trending-up' },
   { id: 'ledger', label: 'Ledger', icon: 'file-text' },
 ];
 
@@ -767,89 +766,6 @@ function ViewReportsTab({ currentUser, reports, patients, patientById, unlockedS
   );
 }
 
-type EconomySimulatorTabProps = {
-  currentUser: Clinic;
-  clinics: Clinic[];
-  onSimulateConsumeOnly: () => void;
-  onSimulateOthersViewMe: () => void;
-};
-
-function EconomySimulatorTab({ currentUser, clinics, onSimulateConsumeOnly, onSimulateOthersViewMe }: EconomySimulatorTabProps) {
-  return (
-    <div className="p-6 md:p-8 lg:p-10 max-w-6xl">
-      <h2 className="text-3xl lg:text-4xl font-bold mb-8 text-slate-800">Credit Monitor</h2>
-
-      <div className="bg-white rounded-2xl border shadow-sm overflow-hidden mb-8 overflow-x-auto">
-        <table className="w-full min-w-[760px] text-left text-base">
-          <thead className="bg-slate-50 border-b text-slate-500 uppercase text-xs">
-            <tr>
-              <th className="px-6 py-4 lg:py-5 font-bold">Clinic</th>
-              <th className="px-6 py-4 lg:py-5 font-bold">Status</th>
-              <th className="px-6 py-4 lg:py-5 font-bold">Credits</th>
-              <th className="px-6 py-4 lg:py-5 font-bold text-center">Shared</th>
-              <th className="px-6 py-4 lg:py-5 font-bold text-center">Viewed</th>
-              <th className="px-6 py-4 lg:py-5 font-bold">Net</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {clinics.map((clinic) => {
-              const net = clinic.credits - INITIAL_CREDITS;
-
-              return (
-                <tr key={clinic.id} className={clinic.id === currentUser.id ? 'bg-blue-50/50' : ''}>
-                  <td className="px-6 py-5 font-medium text-slate-900">{clinic.name} {clinic.id === currentUser.id ? '(Me)' : ''}</td>
-                  <td className="px-6 py-5">
-                    <span className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase ${
-                      clinic.optedIn ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    }`}>
-                      {clinic.optedIn ? 'In' : 'Out'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5 font-bold text-lg">{clinic.credits}</td>
-                  <td className="px-6 py-5 text-center">{clinic.reportsShared || 0}</td>
-                  <td className="px-6 py-5 text-center">{clinic.reportsViewed || 0}</td>
-                  <td className={`px-6 py-5 font-bold ${net > 0 ? 'text-green-600' : net < 0 ? 'text-red-500' : 'text-slate-400'}`}>
-                    {net > 0 ? '+' : ''}{net}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-        <div className="bg-white rounded-2xl border p-6 lg:p-8 shadow-sm">
-          <h3 className="font-bold text-xl lg:text-2xl mb-3 text-slate-800">Consume Action</h3>
-          <p className="text-base text-slate-500 mb-6 leading-relaxed">
-            Simulate the drain of your credits by viewing multiple external reports.
-            This demonstrates how a clinic that doesn't share eventually hits the credit floor.
-          </p>
-          <button
-            onClick={onSimulateConsumeOnly}
-            className="w-full bg-slate-100 text-slate-700 font-bold text-base py-3.5 rounded-xl hover:bg-slate-200 transition-colors"
-          >
-            Simulate 5 Views (Consume-only)
-          </button>
-        </div>
-        <div className="bg-white rounded-2xl border p-6 lg:p-8 shadow-sm">
-          <h3 className="font-bold text-xl lg:text-2xl mb-3 text-slate-800">Earning Action</h3>
-          <p className="text-base text-slate-500 mb-6 leading-relaxed">
-            Simulate another clinic viewing one of your shared reports.
-            This demonstrates how contribution sustains your ability to access data.
-          </p>
-          <button
-            onClick={onSimulateOthersViewMe}
-            className="w-full bg-blue-100 text-blue-700 font-bold text-base py-3.5 rounded-xl hover:bg-blue-200 transition-colors"
-          >
-            Simulate Others Viewing My Report
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 type LedgerTabProps = {
   ledger: LedgerEntry[];
 };
@@ -1134,125 +1050,6 @@ function App() {
     );
   };
 
-  const handleSimulateConsumeOnly = () => {
-    if (!currentUser) {
-      return;
-    }
-
-    if (!currentUser.optedIn) {
-      alert('Opt in first');
-      return;
-    }
-
-    const externalReports = reports.filter((report) => {
-      if (report.authorClinicId === currentUser.id || report.tier === 'Private') {
-        return false;
-      }
-
-      const patient = PATIENT_BY_ID[report.patientId];
-      if (!patient?.consent) {
-        return false;
-      }
-
-      return !unlockedSet.has(unlockedKey(currentUser.id, report.id));
-    });
-
-    let creditsUsed = 0;
-    let count = 0;
-    const newUnlocks: UnlockedReport[] = [];
-    const authorCreditDelta: Record<string, number> = {};
-
-    for (const report of externalReports) {
-      if (count >= MAX_SIMULATED_VIEWS) {
-        break;
-      }
-      if (currentUser.credits - creditsUsed < VIEW_COST) {
-        break;
-      }
-
-      creditsUsed += VIEW_COST;
-      count += 1;
-      newUnlocks.push({ viewerClinicId: currentUser.id, reportId: report.id });
-      authorCreditDelta[report.authorClinicId] = (authorCreditDelta[report.authorClinicId] ?? 0) + VIEW_COST;
-
-      addLedgerEntry(
-        LedgerEventType.TRANSFER,
-        `SIMULATION: ${currentUser.name} consumed ${(ANONYMIZED_LABEL_BY_CLINIC_ID[report.authorClinicId] ?? 'Contributor')}'s report. -${VIEW_COST} credits.`,
-      );
-    }
-
-    if (count === 0) {
-      alert('No eligible external reports available to simulate.');
-      return;
-    }
-
-    addUnlockedReports(newUnlocks);
-
-    setClinics((prev) =>
-      prev.map((clinic) => {
-        if (clinic.id === currentUser.id) {
-          return {
-            ...clinic,
-            credits: clinic.credits - creditsUsed,
-            reportsViewed: (clinic.reportsViewed || 0) + count,
-          };
-        }
-
-        const delta = authorCreditDelta[clinic.id] ?? 0;
-        if (!delta) {
-          return clinic;
-        }
-
-        return {
-          ...clinic,
-          credits: clinic.credits + delta,
-        };
-      }),
-    );
-
-    alert(`Simulation: Consumed ${count} reports costing ${creditsUsed} credits.`);
-  };
-
-  const handleSimulateOthersViewMe = () => {
-    if (!currentUser) {
-      return;
-    }
-
-    const mySharedReports = reports.filter((report) => {
-      if (report.authorClinicId !== currentUser.id || report.tier === 'Private') {
-        return false;
-      }
-      const patient = PATIENT_BY_ID[report.patientId];
-      return Boolean(patient?.consent);
-    });
-
-    if (mySharedReports.length === 0) {
-      alert('You haven’t shared any eligible reports yet. Create one first!');
-      return;
-    }
-
-    const otherClinic = clinics.find((clinic) => clinic.id !== currentUser.id && clinic.credits >= VIEW_COST);
-    if (!otherClinic) {
-      alert('No other clinics have enough credits to view your reports.');
-      return;
-    }
-
-    setClinics((prev) =>
-      prev.map((clinic) => {
-        if (clinic.id === otherClinic.id) {
-          return { ...clinic, credits: clinic.credits - VIEW_COST };
-        }
-        if (clinic.id === currentUser.id) {
-          return { ...clinic, credits: clinic.credits + VIEW_COST };
-        }
-        return clinic;
-      }),
-    );
-
-    addLedgerEntry(LedgerEventType.TRANSFER, `SIMULATION: ${otherClinic.name} viewed your report. +${VIEW_COST} credits to you.`);
-    alert(`Simulation: Someone viewed your report. +${VIEW_COST} credits!`);
-  };
-
   if (!currentUser) {
     return <LoginScreen clinics={clinics} onLogin={handleLogin} />;
   }
@@ -1304,14 +1101,6 @@ function App() {
               patientById={PATIENT_BY_ID}
               unlockedSet={unlockedSet}
               onViewReport={handleViewReport}
-            />
-          )}
-          {activeTab === 'simulator' && (
-            <EconomySimulatorTab
-              currentUser={currentUser}
-              clinics={clinics}
-              onSimulateConsumeOnly={handleSimulateConsumeOnly}
-              onSimulateOthersViewMe={handleSimulateOthersViewMe}
             />
           )}
           {activeTab === 'ledger' && <LedgerTab ledger={ledger} />}
