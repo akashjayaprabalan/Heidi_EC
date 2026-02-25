@@ -22,6 +22,9 @@ type CreateReportInput = {
   patientId: string;
   tier: ReportTier;
   notes: string;
+  summary: string;
+  reportType: string;
+  visitDate: string;
 };
 
 type NavItem = {
@@ -96,6 +99,34 @@ const ANONYMIZED_LABEL_BY_CLINIC_ID = SEED_CLINICS.reduce<Record<string, string>
 
 function getSafePatientRef(patientId: string): string {
   return `Patient Record ${patientId.toUpperCase()}`;
+}
+
+function getReportSummaryText(report: Report): string {
+  const explicitSummary = report.summary?.trim();
+  if (explicitSummary) {
+    return explicitSummary;
+  }
+
+  if (report.tier === 'Summary') {
+    return report.notes;
+  }
+
+  return report.notes.length > 100 ? `${report.notes.slice(0, 100)}...` : report.notes;
+}
+
+function getReportTypeLabel(report: Report): string {
+  return report.reportType?.trim() || 'Clinical Note';
+}
+
+function formatReportVisitDate(report: Report): string {
+  if (report.visitDate) {
+    const parsedDate = new Date(`${report.visitDate}T00:00:00`);
+    if (!Number.isNaN(parsedDate.getTime())) {
+      return parsedDate.toLocaleDateString();
+    }
+  }
+
+  return new Date(report.timestamp).toLocaleDateString();
 }
 
 function toRecordById<T extends { id: string }>(items: readonly T[]): Record<string, T> {
@@ -384,27 +415,38 @@ type CreateReportTabProps = {
 
 function CreateReportTab({ currentUser, patients, patientById, reports, onCreateReport }: CreateReportTabProps) {
   const [selectedPatientId, setSelectedPatientId] = useState('');
-  const [tier, setTier] = useState<ReportTier>('Summary');
+  const [visitDate, setVisitDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [reportType, setReportType] = useState('Progress Note');
   const [notes, setNotes] = useState('');
+  const [summary, setSummary] = useState('');
+  const [selectedLocalReportId, setSelectedLocalReportId] = useState<string | null>(null);
 
   const myReports = useMemo(
     () => reports.filter((report) => report.authorClinicId === currentUser.id),
     [reports, currentUser.id],
   );
+  const selectedLocalReport = useMemo(
+    () => myReports.find((report) => report.id === selectedLocalReportId) ?? null,
+    [myReports, selectedLocalReportId],
+  );
 
   const handleSave = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedPatientId || !notes.trim()) {
+    if (!selectedPatientId || !notes.trim() || !summary.trim()) {
       return;
     }
 
     onCreateReport({
       patientId: selectedPatientId,
-      tier,
+      tier: 'Full',
       notes: notes.trim(),
+      summary: summary.trim(),
+      reportType: reportType.trim(),
+      visitDate,
     });
 
     setNotes('');
+    setSummary('');
     alert('Report saved successfully');
   };
 
@@ -431,28 +473,56 @@ function CreateReportTab({ currentUser, patients, patientById, reports, onCreate
           </div>
           <div>
             <label className="block text-base font-semibold mb-2">Sharing Tier</label>
-            <div className="grid grid-cols-3 gap-3">
-              {REPORT_TIERS.map((reportTier) => (
-                <button
-                  key={reportTier}
-                  type="button"
-                  onClick={() => setTier(reportTier)}
-                  className={`p-3 text-sm lg:text-base font-semibold border rounded-xl transition-colors ${
-                    tier === reportTier ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-600'
-                  }`}
-                >
-                  {reportTier}
-                </button>
-              ))}
+            <div className="p-3.5 lg:p-4 text-sm lg:text-base font-semibold border rounded-xl bg-blue-600 text-white border-blue-600">
+              Full Report
+            </div>
+            <p className="mt-2 text-xs lg:text-sm text-slate-500">
+              Summary is now captured separately below.
+            </p>
+          </div>
+          <div>
+            <label className="block text-base font-semibold mb-2">Report Details</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1">Date</label>
+                <input
+                  type="date"
+                  className="w-full border rounded-xl p-3 lg:p-4 bg-slate-50 text-base"
+                  value={visitDate}
+                  onChange={(e) => setVisitDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1">Report Type</label>
+                <input
+                  type="text"
+                  className="w-full border rounded-xl p-3 lg:p-4 bg-slate-50 text-base"
+                  value={reportType}
+                  onChange={(e) => setReportType(e.target.value)}
+                  placeholder="e.g. Progress Note"
+                  required
+                />
+              </div>
             </div>
           </div>
           <div>
-            <label className="block text-base font-semibold mb-2">Visit Notes</label>
+            <label className="block text-base font-semibold mb-2">Full Report</label>
             <textarea
               className="w-full border rounded-xl p-3 lg:p-4 h-40 bg-slate-50 text-base"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Clinical notes..."
+              placeholder="Full clinical report details..."
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-base font-semibold mb-2">Summary</label>
+            <textarea
+              className="w-full border rounded-xl p-3 lg:p-4 h-28 bg-slate-50 text-base"
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
+              placeholder="Short continuity summary for sharing..."
               required
             />
           </div>
@@ -475,12 +545,23 @@ function CreateReportTab({ currentUser, patients, patientById, reports, onCreate
             myReports.map((report) => {
               const patient = patientById[report.patientId];
               const isShared = currentUser.optedIn && patient?.consent && report.tier !== 'Private';
+              const isSelected = selectedLocalReportId === report.id;
 
               return (
-                <div key={report.id} className="bg-white border rounded-xl p-5 lg:p-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 shadow-sm">
+                <button
+                  key={report.id}
+                  type="button"
+                  onClick={() => setSelectedLocalReportId(report.id)}
+                  className={`w-full text-left bg-white border rounded-xl p-5 lg:p-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 shadow-sm transition-colors ${
+                    isSelected ? 'border-blue-300 ring-2 ring-blue-100' : 'hover:bg-slate-50'
+                  }`}
+                >
                   <div>
                     <div className="font-semibold text-lg text-slate-800">{patient?.name}</div>
-                    <div className="text-sm text-slate-500">{new Date(report.timestamp).toLocaleString()}</div>
+                    <div className="text-sm text-slate-500">
+                      {formatReportVisitDate(report)} • {getReportTypeLabel(report)}
+                    </div>
+                    <div className="text-xs text-slate-400">{new Date(report.timestamp).toLocaleString()}</div>
                   </div>
                   <div className="flex gap-2 items-center flex-wrap">
                     <span className={`text-xs px-3 py-1.5 rounded-md font-bold uppercase ${
@@ -493,10 +574,46 @@ function CreateReportTab({ currentUser, patients, patientById, reports, onCreate
                     }`}>
                       {isShared ? 'Shared' : 'Private'}
                     </span>
+                    <span className="text-xs px-3 py-1.5 rounded-md font-bold uppercase bg-slate-100 text-slate-500">
+                      {isSelected ? 'Viewing' : 'Click to View'}
+                    </span>
                   </div>
-                </div>
+                </button>
               );
             })
+          )}
+          {selectedLocalReport && (
+            <div className="bg-white border rounded-2xl p-5 lg:p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
+                <div>
+                  <h4 className="text-lg font-bold text-slate-800">
+                    {patientById[selectedLocalReport.patientId]?.name ?? 'Patient'}
+                  </h4>
+                  <p className="text-sm text-slate-500">
+                    {formatReportVisitDate(selectedLocalReport)} • {getReportTypeLabel(selectedLocalReport)}
+                  </p>
+                </div>
+                <div className="text-xs text-slate-400 font-medium">
+                  Saved {new Date(selectedLocalReport.timestamp).toLocaleString()}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-2">Summary</div>
+                  <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4 text-slate-700 leading-relaxed">
+                    {getReportSummaryText(selectedLocalReport)}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-2">Full Report</div>
+                  <div className="rounded-xl border bg-slate-50 p-4 text-slate-800 leading-relaxed whitespace-pre-wrap">
+                    {selectedLocalReport.notes}
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -571,7 +688,9 @@ function ViewReportsTab({ currentUser, reports, patients, patientById, unlockedS
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-bold text-base lg:text-lg text-slate-700">{ANONYMIZED_LABEL_BY_CLINIC_ID[report.authorClinicId] ?? 'Contributor'}</span>
                   <span className="text-xs text-slate-400">•</span>
-                  <span className="text-sm text-slate-400">{new Date(report.timestamp).toLocaleDateString()}</span>
+                  <span className="text-sm text-slate-400">{formatReportVisitDate(report)}</span>
+                  <span className="text-xs text-slate-400">•</span>
+                  <span className="text-sm text-slate-400">{getReportTypeLabel(report)}</span>
                 </div>
                 <span className={`text-xs md:text-sm px-3 py-1.5 rounded-md font-bold uppercase ${
                   report.tier === 'Full' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
@@ -609,7 +728,7 @@ function ViewReportsTab({ currentUser, reports, patients, patientById, unlockedS
                     <div>
                       <h4 className="text-sm font-bold uppercase text-slate-400 mb-2 tracking-widest">Continuity Summary</h4>
                       <div className="bg-blue-50/50 p-5 rounded-xl border border-blue-100 text-slate-700 text-base leading-relaxed italic">
-                        &quot;{report.tier === 'Summary' ? report.notes : `${report.notes.slice(0, 100)}...`}&quot;
+                        &quot;{getReportSummaryText(report)}&quot;
                       </div>
                     </div>
 
@@ -621,6 +740,17 @@ function ViewReportsTab({ currentUser, reports, patients, patientById, unlockedS
                         </div>
                       </div>
                     )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="rounded-xl border bg-white p-4">
+                        <div className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Visit Date</div>
+                        <div className="text-sm font-semibold text-slate-700">{formatReportVisitDate(report)}</div>
+                      </div>
+                      <div className="rounded-xl border bg-white p-4">
+                        <div className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Report Type</div>
+                        <div className="text-sm font-semibold text-slate-700">{getReportTypeLabel(report)}</div>
+                      </div>
+                    </div>
 
                     <div className="pt-4 border-t flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-xs text-slate-400 uppercase font-bold tracking-wide">
                       <span>Unlocked Content</span>
@@ -919,6 +1049,9 @@ function App() {
       authorClinicId: currentUser.id,
       tier: input.tier,
       notes: input.notes,
+      summary: input.summary,
+      reportType: input.reportType,
+      visitDate: input.visitDate,
       timestamp: Date.now(),
     };
 

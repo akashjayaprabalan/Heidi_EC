@@ -24,6 +24,9 @@ export interface Report {
   authorClinicId: string;
   tier: ReportTier;
   notes: string;
+  summary?: string;
+  reportType?: string;
+  visitDate?: string;
   timestamp: number;
 }
 
