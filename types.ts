@@ -51,3 +51,10 @@ export interface LedgerEntry {
   type: LedgerEventType;
   message: string;
 }
+
+export interface AppSnapshot {
+  clinics: Clinic[];
+  reports: Report[];
+  ledger: LedgerEntry[];
+  unlockedReports: UnlockedReport[];
+}

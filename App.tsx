@@ -1,4 +1,4 @@
-import { FormEvent, memo, useCallback, useMemo, useState } from 'react';
+import { FormEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Clinic,
   Patient,
@@ -7,6 +7,7 @@ import {
   LedgerEventType,
   UnlockedReport,
   ReportTier,
+  AppSnapshot,
 } from './types';
 import {
   SEED_CLINICS,
@@ -14,6 +15,11 @@ import {
   VIEW_COST,
   INITIAL_CREDITS,
 } from './constants';
+import {
+  canUseSupabaseSnapshotStore,
+  loadAppSnapshot,
+  saveAppSnapshot,
+} from './appSnapshotStore';
 
 type ActiveTab = 'settings' | 'create' | 'view' | 'ledger';
 type IconName = 'settings' | 'plus' | 'search' | 'file-text' | 'lock';
@@ -40,8 +46,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'ledger', label: 'Ledger', icon: 'file-text' },
 ];
 
-const REPORT_TIERS: ReportTier[] = ['Private', 'Summary', 'Full'];
-const MAX_SIMULATED_VIEWS = 5;
+const SUPABASE_SAVE_DEBOUNCE_MS = 300;
 const ACTIVE_TAB_DEFAULT: ActiveTab = 'settings';
 const DEMO_PASSWORDS: Record<string, string> = {
   harbour: 'harbour123',
@@ -145,6 +150,10 @@ function buildInitialClinics(): Clinic[] {
     ...clinic,
     reportsShared: sharedCounts[clinic.id] ?? clinic.reportsShared ?? 0,
   }));
+}
+
+function snapshotToString(snapshot: AppSnapshot): string {
+  return JSON.stringify(snapshot);
 }
 
 function makeId(): string {
@@ -842,6 +851,89 @@ function App() {
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [unlockedReports, setUnlockedReports] = useState<UnlockedReport[]>([]);
   const [activeTab, setActiveTab] = useState<ActiveTab>(ACTIVE_TAB_DEFAULT);
+  const [hasHydratedStore, setHasHydratedStore] = useState(false);
+  const saveTimerRef = useRef<number | null>(null);
+  const lastSavedSnapshotRef = useRef('');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const hydrateFromSupabase = async () => {
+      if (!canUseSupabaseSnapshotStore()) {
+        if (!cancelled) {
+          setHasHydratedStore(true);
+        }
+        return;
+      }
+
+      try {
+        const snapshot = await loadAppSnapshot();
+        if (cancelled) {
+          return;
+        }
+
+        if (snapshot) {
+          lastSavedSnapshotRef.current = snapshotToString(snapshot);
+          setClinics(snapshot.clinics);
+          setReports(snapshot.reports);
+          setLedger(snapshot.ledger);
+          setUnlockedReports(snapshot.unlockedReports);
+        }
+      } catch (error) {
+        console.warn('Supabase snapshot hydration failed; using local seed data instead.', error);
+      } finally {
+        if (!cancelled) {
+          setHasHydratedStore(true);
+        }
+      }
+    };
+
+    void hydrateFromSupabase();
+
+    return () => {
+      cancelled = true;
+      if (saveTimerRef.current !== null) {
+        window.clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydratedStore || !canUseSupabaseSnapshotStore()) {
+      return;
+    }
+
+    const snapshot: AppSnapshot = {
+      clinics,
+      reports,
+      ledger,
+      unlockedReports,
+    };
+
+    const serializedSnapshot = snapshotToString(snapshot);
+    if (serializedSnapshot === lastSavedSnapshotRef.current) {
+      return;
+    }
+
+    if (saveTimerRef.current !== null) {
+      window.clearTimeout(saveTimerRef.current);
+    }
+
+    saveTimerRef.current = window.setTimeout(() => {
+      lastSavedSnapshotRef.current = serializedSnapshot;
+
+      void saveAppSnapshot(snapshot).catch((error) => {
+        lastSavedSnapshotRef.current = '';
+        console.warn('Supabase snapshot save failed.', error);
+      });
+    }, SUPABASE_SAVE_DEBOUNCE_MS);
+
+    return () => {
+      if (saveTimerRef.current !== null) {
+        window.clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, [clinics, hasHydratedStore, ledger, reports, unlockedReports]);
 
   const clinicById = useMemo(
     () => clinics.reduce<Record<string, Clinic>>((acc, clinic) => {
