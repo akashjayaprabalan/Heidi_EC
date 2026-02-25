@@ -229,62 +229,39 @@ function LoginScreen({ clinics, onLogin }: LoginScreenProps) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-900">
       <div className="mb-12 text-center">
-        <h1 className="text-4xl font-black text-white mb-2 tracking-tighter">Kinetic</h1>
+        <h1 className="text-5xl font-black text-white mb-2 tracking-tighter">Kinetic</h1>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-2 text-slate-800 text-center">Demo Sign-in</h2>
-        <p className="text-sm text-slate-500 mb-6 text-center">
-          Choose a clinic identity with its demo username and password.
-        </p>
-        <form onSubmit={onLogin} className="space-y-4">
+      <div className="bg-white rounded-2xl shadow-2xl p-10 md:p-12 w-full max-w-xl">
+        <h2 className="text-2xl font-bold mb-8 text-slate-800 text-center">Sign-in</h2>
+        <form onSubmit={onLogin} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
+            <label className="block text-base font-medium text-slate-700 mb-2">Username</label>
             <input
               name="username"
               type="text"
               placeholder="e.g. harbour"
               autoComplete="username"
-              className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              className="w-full border rounded-xl p-4 text-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+            <label className="block text-base font-medium text-slate-700 mb-2">Password</label>
             <input
               name="password"
               type="password"
               placeholder="Enter demo password"
               autoComplete="current-password"
-              className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              className="w-full border rounded-xl p-4 text-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
               required
             />
           </div>
-          <button className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-all shadow-lg active:scale-95">
+          <button className="w-full bg-blue-600 text-white text-lg font-bold py-4 rounded-xl hover:bg-blue-700 transition-all shadow-lg active:scale-95">
             Enter Network
           </button>
         </form>
 
-        <div className="mt-8 pt-8 border-t">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Demo Access</h3>
-          <div className="grid grid-cols-1 gap-2">
-            {clinics.map((clinic) => (
-              <div key={clinic.id} className="text-[10px] flex items-center justify-between gap-3 bg-slate-50 p-2 rounded">
-                <div className="min-w-0">
-                  <div className="font-bold text-slate-600 truncate">{clinic.name}</div>
-                  <div className="text-slate-400 font-mono">u: {clinic.username}</div>
-                </div>
-                <div className="text-right font-mono text-slate-500">
-                  <div>p: {DEMO_PASSWORDS[clinic.username] ?? 'not-set'}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-8 max-w-md text-center text-slate-500 text-xs">
-        This is a behavior prototype. No real data is stored.
       </div>
     </div>
   );
@@ -368,23 +345,23 @@ function SettingsTab({ currentUser, onToggleOptIn }: SettingsTabProps) {
       <h2 className="text-3xl lg:text-4xl font-bold mb-8">Clinic Settings</h2>
 
       <div className="flex-1 flex flex-col">
-        <div className="bg-white rounded-2xl border shadow-sm p-8 md:p-10 lg:p-14">
-          <div className="mb-10 lg:mb-12">
-            <h3 className="font-semibold text-4xl md:text-5xl lg:text-6xl leading-tight">Participation Status</h3>
-            <p className="mt-3 text-2xl md:text-3xl text-slate-500 leading-tight">Enable network sharing and viewing</p>
+        <div className="w-full max-w-5xl mx-auto bg-white rounded-2xl border shadow-sm p-5 md:p-6 lg:p-8">
+          <div className="mb-6 lg:mb-8">
+            <h3 className="font-semibold text-xl md:text-2xl lg:text-3xl leading-tight">Participation Status</h3>
+            <p className="mt-2 text-base md:text-lg text-slate-500 leading-tight">Enable network sharing and viewing</p>
           </div>
 
-          <div className="space-y-8 lg:space-y-10 text-2xl lg:text-3xl text-slate-600 leading-snug">
-            <div className="flex gap-5 lg:gap-6 items-start">
-              <div className="h-12 w-12 lg:h-14 lg:w-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-xl lg:text-2xl font-bold">1</div>
+          <div className="space-y-5 lg:space-y-6 text-base md:text-lg lg:text-xl text-slate-600 leading-snug">
+            <div className="flex gap-3 lg:gap-4 items-start">
+              <div className="h-9 w-9 lg:h-10 lg:w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-base lg:text-lg font-bold">1</div>
               <p>View costs <strong>10 credits</strong>, which are transferred directly to the report&apos;s author clinic.</p>
             </div>
-            <div className="flex gap-5 lg:gap-6 items-start">
-              <div className="h-12 w-12 lg:h-14 lg:w-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-xl lg:text-2xl font-bold">2</div>
+            <div className="flex gap-3 lg:gap-4 items-start">
+              <div className="h-9 w-9 lg:h-10 lg:w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-base lg:text-lg font-bold">2</div>
               <p>Clinics that only consume will run out after 5 views ({INITIAL_CREDITS} initial credits / 10 cost).</p>
             </div>
-            <div className="flex gap-5 lg:gap-6 items-start">
-              <div className="h-12 w-12 lg:h-14 lg:w-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-xl lg:text-2xl font-bold">3</div>
+            <div className="flex gap-3 lg:gap-4 items-start">
+              <div className="h-9 w-9 lg:h-10 lg:w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-base lg:text-lg font-bold">3</div>
               <p>Judgement-safe: Origins are shown as <strong>Contributor #XX</strong>. Private notes are never shared.</p>
             </div>
           </div>
