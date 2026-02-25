@@ -725,6 +725,13 @@ type LedgerTabProps = {
 };
 
 function LedgerTab({ ledger }: LedgerTabProps) {
+  const creditRequestTransactions = ledger.filter(
+    (entry) =>
+      entry.type === LedgerEventType.TRANSFER &&
+      entry.message.includes(`-${VIEW_COST}`) &&
+      entry.message.includes(`+${VIEW_COST}`),
+  );
+
   return (
     <div className="p-6 md:p-8 lg:p-10">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
@@ -747,7 +754,7 @@ function LedgerTab({ ledger }: LedgerTabProps) {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {ledger.map((entry) => (
+            {creditRequestTransactions.map((entry) => (
               <tr key={entry.id} className="hover:bg-slate-50/80 transition-colors">
                 <td className="px-6 py-5 text-slate-400 whitespace-nowrap align-top">
                   {new Date(entry.timestamp).toLocaleTimeString()}
@@ -768,10 +775,10 @@ function LedgerTab({ ledger }: LedgerTabProps) {
                 <td className="px-6 py-5 text-slate-700 font-medium leading-relaxed">{entry.message}</td>
               </tr>
             ))}
-            {ledger.length === 0 && (
+            {creditRequestTransactions.length === 0 && (
               <tr>
                 <td colSpan={3} className="px-6 py-14 text-center text-slate-400 italic text-base">
-                  No ledger events recorded yet.
+                  No 10-credit request transactions recorded yet.
                 </td>
               </tr>
             )}
