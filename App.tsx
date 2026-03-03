@@ -1,10 +1,10 @@
 import { FormEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
+import { LedgerEventType } from './types';
+import type {
   Clinic,
   Patient,
   Report,
   LedgerEntry,
-  LedgerEventType,
   UnlockedReport,
   ReportTier,
   AppSnapshot,
@@ -20,9 +20,11 @@ import {
   loadAppSnapshot,
   saveAppSnapshot,
 } from './appSnapshotStore';
+import { LeaderboardTab } from './LeaderboardTab';
+import { LoginScreen } from './LoginScreen';
 
-type ActiveTab = 'settings' | 'create' | 'view' | 'ledger';
-type IconName = 'settings' | 'plus' | 'search' | 'file-text' | 'lock';
+type ActiveTab = 'settings' | 'create' | 'view' | 'leaderboard' | 'ledger';
+type IconName = 'settings' | 'plus' | 'search' | 'trending-up' | 'file-text' | 'lock';
 
 type CreateReportInput = {
   patientId: string;
@@ -43,6 +45,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'settings', label: 'Settings', icon: 'settings' },
   { id: 'create', label: 'My Reports', icon: 'plus' },
   { id: 'view', label: 'View Reports', icon: 'search' },
+  { id: 'leaderboard', label: 'Leaderboard', icon: 'trending-up' },
   { id: 'ledger', label: 'Ledger', icon: 'file-text' },
 ];
 
@@ -219,85 +222,6 @@ const Icon = memo(function Icon({ name }: { name: IconName }) {
       return null;
   }
 });
-
-type LoginScreenProps = {
-  clinics: Clinic[];
-  onLogin: (e: FormEvent<HTMLFormElement>) => void;
-};
-
-function LoginScreen({ clinics, onLogin }: LoginScreenProps) {
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-900">
-      <div className="mb-12 text-center">
-        <h1 className="text-5xl font-black text-white mb-2 tracking-tighter">Kinetic</h1>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-2xl p-10 md:p-12 w-full max-w-xl">
-        <h2 className="text-2xl font-bold mb-8 text-slate-800 text-center">Sign-in</h2>
-        <form onSubmit={onLogin} className="space-y-5">
-          <div>
-            <label className="block text-base font-medium text-slate-700 mb-2">Username</label>
-            <input
-              name="username"
-              type="text"
-              placeholder="e.g. harbour"
-              autoComplete="username"
-              className="w-full border rounded-xl p-4 text-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-base font-medium text-slate-700 mb-2">Password</label>
-            <input
-              name="password"
-              type="password"
-              placeholder="Enter demo password"
-              autoComplete="current-password"
-              className="w-full border rounded-xl p-4 text-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-              required
-            />
-          </div>
-          <button className="w-full bg-blue-600 text-white text-lg font-bold py-4 rounded-xl hover:bg-blue-700 transition-all shadow-lg active:scale-95">
-            Enter Network
-          </button>
-        </form>
-
-      </div>
-    </div>
-  );
-}
-
-type KPIStripProps = {
-  optInCount: number;
-  totalClinics: number;
-  reportsCount: number;
-  credits: number;
-};
-
-function KPIStrip({ optInCount, totalClinics, reportsCount, credits }: KPIStripProps) {
-  return (
-    <div className="bg-slate-900 text-white px-6 py-4 md:px-8 md:py-5 flex flex-wrap items-center gap-6 md:gap-10 text-sm md:text-base">
-      <div className="flex flex-col">
-        <span className="text-slate-400 text-[11px] md:text-xs uppercase tracking-wider font-bold">Network Health</span>
-        <span className="font-semibold text-sm md:text-base">{optInCount}/{totalClinics} Clinics Opted In</span>
-      </div>
-      <div className="flex flex-col">
-        <span className="text-slate-400 text-[11px] md:text-xs uppercase tracking-wider font-bold">Volume</span>
-        <span className="font-semibold text-sm md:text-base">{reportsCount} Reports Shared</span>
-      </div>
-      <div className="flex flex-col">
-        <span className="text-slate-400 text-[11px] md:text-xs uppercase tracking-wider font-bold">Rule</span>
-        <span className="font-semibold italic text-sm md:text-base">View cost: {VIEW_COST} → Transferred to Author</span>
-      </div>
-      <div className="flex flex-col ml-auto">
-        <span className="text-slate-400 text-[11px] md:text-xs uppercase tracking-wider font-bold">Active Balance</span>
-        <span className={`font-bold text-xl md:text-2xl ${credits < VIEW_COST ? 'text-red-400' : 'text-green-400'}`}>
-          {credits} Credits
-        </span>
-      </div>
-    </div>
-  );
-}
 
 type SidebarProps = {
   activeTab: ActiveTab;
@@ -1170,6 +1094,12 @@ function App() {
               patientById={PATIENT_BY_ID}
               unlockedSet={unlockedSet}
               onViewReport={handleViewReport}
+            />
+          )}
+          {activeTab === 'leaderboard' && (
+            <LeaderboardTab
+              clinics={clinics}
+              currentUserId={currentUser.id}
             />
           )}
           {activeTab === 'ledger' && <LedgerTab ledger={ledger} />}
