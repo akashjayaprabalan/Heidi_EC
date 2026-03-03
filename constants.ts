@@ -1,5 +1,4 @@
-
-import { Clinic, Patient, LedgerEventType } from './types';
+import { Clinic, Patient } from './types';
 
 export const INITIAL_CREDITS = 50;
 export const VIEW_COST = 10;
