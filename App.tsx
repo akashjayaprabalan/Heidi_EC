@@ -22,6 +22,7 @@ import {
 } from './appSnapshotStore';
 import { LeaderboardTab } from './LeaderboardTab';
 import { LoginScreen } from './LoginScreen';
+import { getReportSharingBlockReason, isReportSharedToNetwork, toRecordById } from './sharing';
 
 type ActiveTab = 'settings' | 'create' | 'view' | 'leaderboard' | 'ledger';
 type IconName = 'settings' | 'plus' | 'search' | 'trending-up' | 'file-text' | 'lock';
@@ -99,6 +100,7 @@ const SEEDED_REPORTS: Report[] = (() => {
 
 const PATIENTS = SEED_PATIENTS;
 const PATIENT_BY_ID = toRecordById(PATIENTS);
+const SEED_CLINIC_BY_ID = toRecordById(SEED_CLINICS);
 const ANONYMIZED_LABEL_BY_CLINIC_ID = SEED_CLINICS.reduce<Record<string, string>>((acc, clinic, index) => {
   acc[clinic.id] = `Contributor #${index + 1}`;
   return acc;
@@ -136,16 +138,12 @@ function formatReportVisitDate(report: Report): string {
   return new Date(report.timestamp).toLocaleDateString();
 }
 
-function toRecordById<T extends { id: string }>(items: readonly T[]): Record<string, T> {
-  return items.reduce<Record<string, T>>((acc, item) => {
-    acc[item.id] = item;
-    return acc;
-  }, {});
-}
-
 function buildInitialClinics(): Clinic[] {
   const sharedCounts = SEEDED_REPORTS.reduce<Record<string, number>>((acc, report) => {
-    acc[report.authorClinicId] = (acc[report.authorClinicId] ?? 0) + 1;
+    if (isReportSharedToNetwork(report, PATIENT_BY_ID, SEED_CLINIC_BY_ID)) {
+      acc[report.authorClinicId] = (acc[report.authorClinicId] ?? 0) + 1;
+    }
+
     return acc;
   }, {});
 
@@ -453,7 +451,8 @@ function CreateReportTab({ currentUser, patients, patientById, reports, onCreate
           ) : (
             myReports.map((report) => {
               const patient = patientById[report.patientId];
-              const isShared = currentUser.optedIn && patient?.consent && report.tier !== 'Private';
+              const sharingBlockReason = getReportSharingBlockReason(currentUser, patient, report.tier);
+              const isShared = sharingBlockReason === null;
               const isSelected = selectedLocalReportId === report.id;
 
               return (
@@ -480,7 +479,7 @@ function CreateReportTab({ currentUser, patients, patientById, reports, onCreate
                     </span>
                     <span className={`text-xs px-3 py-1.5 rounded-md font-bold uppercase ${
                       isShared ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    }`}>
+                    }`} title={sharingBlockReason ?? 'Shared with the Collective'}>
                       {isShared ? 'Shared' : 'Private'}
                     </span>
                     <span className="text-xs px-3 py-1.5 rounded-md font-bold uppercase bg-slate-100 text-slate-500">
@@ -535,11 +534,12 @@ type ViewReportsTabProps = {
   reports: Report[];
   patients: Patient[];
   patientById: Record<string, Patient>;
+  clinicById: Record<string, Clinic>;
   unlockedSet: Set<string>;
   onViewReport: (report: Report) => void;
 };
 
-function ViewReportsTab({ currentUser, reports, patients, patientById, unlockedSet, onViewReport }: ViewReportsTabProps) {
+function ViewReportsTab({ currentUser, reports, patients, patientById, clinicById, unlockedSet, onViewReport }: ViewReportsTabProps) {
   const [searchPatientId, setSearchPatientId] = useState('');
 
   const availableReports = useMemo(() => {
@@ -547,16 +547,13 @@ function ViewReportsTab({ currentUser, reports, patients, patientById, unlockedS
       return [];
     }
 
-    return reports.filter((report) => {
-      const patient = patientById[report.patientId];
-      return (
+    return reports.filter(
+      (report) =>
         report.patientId === searchPatientId &&
         report.authorClinicId !== currentUser.id &&
-        report.tier !== 'Private' &&
-        Boolean(patient?.consent)
-      );
-    });
-  }, [searchPatientId, reports, patientById, currentUser.id]);
+        isReportSharedToNetwork(report, patientById, clinicById),
+    );
+  }, [searchPatientId, reports, patientById, clinicById, currentUser.id]);
 
   return (
     <div className="p-6 md:p-8 lg:p-10 max-w-6xl">
@@ -907,7 +904,7 @@ function App() {
   const handleLogin = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const username = String(formData.get('username') ?? '').trim();
+    const username = String(formData.get('username') ?? '').trim().toLowerCase();
     const password = String(formData.get('password') ?? '');
     const match = clinics.find((clinic) => clinic.username === username);
     if (!match) {
@@ -966,8 +963,8 @@ function App() {
 
     setReports((prev) => [...prev, report]);
 
-    const canShare = currentUser.optedIn && patient.consent && input.tier !== 'Private';
-    if (canShare) {
+    const sharingBlockReason = getReportSharingBlockReason(currentUser, patient, input.tier);
+    if (sharingBlockReason === null) {
       updateClinic(currentUser.id, (clinic) => ({
         ...clinic,
         reportsShared: (clinic.reportsShared || 0) + 1,
@@ -979,18 +976,9 @@ function App() {
       return;
     }
 
-    let reason = '';
-    if (!currentUser.optedIn) {
-      reason = 'Clinic Opted Out';
-    } else if (!patient.consent) {
-      reason = 'No Patient Consent';
-    } else if (input.tier === 'Private') {
-      reason = 'Private Tier Selected';
-    }
-
     addLedgerEntry(
       LedgerEventType.BLOCKED,
-      `${currentUser.name} saved a ${input.tier} report for ${getSafePatientRef(patient.id)}. Network share blocked: ${reason}`,
+      `${currentUser.name} saved a ${input.tier} report for ${getSafePatientRef(patient.id)}. Network share blocked: ${sharingBlockReason}`,
     );
   };
 
@@ -1010,6 +998,18 @@ function App() {
     }
 
     if (unlockedSet.has(unlockedKey(currentUser.id, report.id))) {
+      return;
+    }
+
+    if (
+      report.authorClinicId === currentUser.id ||
+      !isReportSharedToNetwork(report, PATIENT_BY_ID, clinicById)
+    ) {
+      alert('This report is no longer available in the Collective.');
+      addLedgerEntry(
+        LedgerEventType.BLOCKED,
+        `${currentUser.name} could not view ${getSafePatientRef(report.patientId)} because the report is no longer shared`,
+      );
       return;
     }
 
@@ -1092,6 +1092,7 @@ function App() {
               reports={reports}
               patients={PATIENTS}
               patientById={PATIENT_BY_ID}
+              clinicById={clinicById}
               unlockedSet={unlockedSet}
               onViewReport={handleViewReport}
             />
