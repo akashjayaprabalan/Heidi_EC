@@ -84,7 +84,7 @@ export function LoginScreen({ clinics, onLogin }: LoginScreenProps) {
           <div className="w-full bg-white rounded-2xl shadow-2xl p-6 md:p-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
               <h2 className="text-2xl font-bold text-slate-800">Leaderboard</h2>
-              <div className="text-sm text-slate-500">Ranked by remaining credits.</div>
+              <div className="text-sm text-slate-500">Ranked by contribution score.</div>
             </div>
             <LeaderboardTable rows={leaderboardRows} />
           </div>

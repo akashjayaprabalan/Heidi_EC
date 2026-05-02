@@ -13,9 +13,10 @@ export function LeaderboardTable({ rows, currentUserId }: LeaderboardTableProps)
           <tr>
             <th className="px-6 py-4">Rank</th>
             <th className="px-6 py-4">Clinic</th>
+            <th className="px-6 py-4">Contribution Score</th>
             <th className="px-6 py-4">Credits Earned</th>
             <th className="px-6 py-4">Credits Used</th>
-            <th className="px-6 py-4">Remaining Credits</th>
+            <th className="px-6 py-4">Access Runway</th>
           </tr>
         </thead>
         <tbody className="divide-y">
@@ -30,9 +31,13 @@ export function LeaderboardTable({ rows, currentUserId }: LeaderboardTableProps)
                     {row.clinic.optedIn ? 'Opted In' : 'Opted Out'}
                   </div>
                 </td>
+                <td className="px-6 py-5 text-blue-700 font-black text-base">{row.contributionScore}</td>
                 <td className="px-6 py-5 text-green-700 font-semibold">{row.creditsEarned}</td>
                 <td className="px-6 py-5 text-red-600 font-semibold">{row.creditsUsed}</td>
-                <td className="px-6 py-5 text-slate-800 font-bold text-base">{row.remainingCredits}</td>
+                <td className="px-6 py-5">
+                  <div className="text-slate-800 font-bold text-base">{row.accessRunway} unlocks</div>
+                  <div className="text-xs text-slate-400">{row.remainingCredits} credits left</div>
+                </td>
               </tr>
             );
           })}
