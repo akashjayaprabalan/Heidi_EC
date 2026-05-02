@@ -1,5 +1,12 @@
 
-export type ReportTier = 'Private' | 'Summary' | 'Full';
+export type ReportTier = 'Private' | 'Capsule' | 'Summary' | 'Full';
+
+export interface ContinuityCapsule {
+  status: string;
+  interventions: string;
+  risks: string;
+  nextStep: string;
+}
 
 export interface Clinic {
   id: string;
@@ -24,6 +31,7 @@ export interface Report {
   authorClinicId: string;
   tier: ReportTier;
   notes: string;
+  capsule?: ContinuityCapsule;
   summary?: string;
   reportType?: string;
   visitDate?: string;

@@ -20,7 +20,7 @@ function makeReport(overrides: Partial<Report> = {}): Report {
     id: 'r1',
     patientId: 'p1',
     authorClinicId: 'c1',
-    tier: 'Summary',
+    tier: 'Capsule',
     notes: 'Progress note',
     timestamp: 1,
     ...overrides,
@@ -34,12 +34,12 @@ describe('sharing rules', () => {
 
   it('blocks reports from opted-out author clinics', () => {
     expect(isReportSharedToNetwork(makeReport({ authorClinicId: 'c2' }), patientById, clinicById)).toBe(false);
-    expect(getReportSharingBlockReason(clinicById.c2, patientById.p1, 'Summary')).toBe('Clinic Opted Out');
+    expect(getReportSharingBlockReason(clinicById.c2, patientById.p1, 'Capsule')).toBe('Clinic Opted Out');
   });
 
   it('blocks reports for patients who have not consented', () => {
     expect(isReportSharedToNetwork(makeReport({ patientId: 'p2' }), patientById, clinicById)).toBe(false);
-    expect(getReportSharingBlockReason(clinicById.c1, patientById.p2, 'Summary')).toBe('No Patient Consent');
+    expect(getReportSharingBlockReason(clinicById.c1, patientById.p2, 'Capsule')).toBe('No Patient Consent');
   });
 
   it('blocks private reports even when the author and patient are eligible', () => {
