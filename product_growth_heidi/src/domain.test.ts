@@ -3,6 +3,7 @@ import {
   getReportSharingBlockReason,
   getSharedReportPayload,
   getUnlockBlockReason,
+  getPatientHistoryReports,
   INITIAL_CREDITS,
   isReportSharedToNetwork,
   PATIENT_BY_ID,
@@ -159,6 +160,15 @@ describe('seed data coverage', () => {
           isReportSharedToNetwork(report, PATIENT_BY_ID, seedClinicById),
       ),
     ).toBe(true);
+  });
+
+  it('keeps exactly two shared history records for every seed patient', () => {
+    for (const patient of SEED_PATIENTS) {
+      expect(
+        getPatientHistoryReports(SEEDED_REPORTS, patient.id, PATIENT_BY_ID, seedClinicById),
+        patient.name,
+      ).toHaveLength(2);
+    }
   });
 
   it('replaces stale seeded reports in persisted snapshots while keeping custom reports', () => {

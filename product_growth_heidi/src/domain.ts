@@ -375,6 +375,21 @@ export function isReportSharedToNetwork(
   ) === null;
 }
 
+export function getPatientHistoryReports(
+  reports: readonly Report[],
+  patientId: string,
+  patientById: Record<string, Patient>,
+  clinicById: Record<string, Clinic>,
+): Report[] {
+  return reports
+    .filter(
+      (report) =>
+        report.patientId === patientId &&
+        isReportSharedToNetwork(report, patientById, clinicById),
+    )
+    .sort((a, b) => a.timestamp - b.timestamp);
+}
+
 export function getReportCapsule(report: Report): ContinuityCapsule {
   if (report.capsule) {
     return report.capsule;

@@ -12,6 +12,7 @@ import {
   getCapsuleEntries,
   getOptInRate,
   getReportCapsule,
+  getPatientHistoryReports,
   getReportSharingBlockReason,
   getReportTierLabel,
   getReportTypeLabel,
@@ -670,18 +671,13 @@ export function ViewReportsTab({ currentUser, reports, patients, patientById, cl
   const [searchPatientId, setSearchPatientId] = useState('');
   const [viewStatusByReportId, setViewStatusByReportId] = useState<Record<string, ViewReportResult>>({});
 
-  const availableReports = useMemo(() => {
+  const patientHistoryReports = useMemo(() => {
     if (!searchPatientId) {
       return [];
     }
 
-    return reports.filter(
-      (report) =>
-        report.patientId === searchPatientId &&
-        report.authorClinicId !== currentUser.id &&
-        isReportSharedToNetwork(report, patientById, clinicById),
-    );
-  }, [searchPatientId, reports, patientById, clinicById, currentUser.id]);
+    return getPatientHistoryReports(reports, searchPatientId, patientById, clinicById);
+  }, [searchPatientId, reports, patientById, clinicById]);
 
   return (
     <div className="p-6 md:p-8 lg:p-10 max-w-6xl">
@@ -706,20 +702,21 @@ export function ViewReportsTab({ currentUser, reports, patients, patientById, cl
           </select>
         </div>
         <div className="bg-slate-50 px-5 py-3 border rounded-xl text-base text-slate-500 whitespace-nowrap">
-          {availableReports.length} External Reports Available
+          {patientHistoryReports.length} Records Available
         </div>
       </div>
 
       <div className="space-y-8">
-        {searchPatientId && availableReports.length === 0 && (
+        {searchPatientId && patientHistoryReports.length === 0 && (
           <div className="text-center py-16 bg-white border rounded-2xl border-dashed">
-            <p className="text-slate-400 text-lg">No external shared reports found for this patient.</p>
+            <p className="text-slate-400 text-lg">No shared records found for this patient.</p>
           </div>
         )}
 
-        {availableReports.map((report) => {
-          const isUnlocked = unlockedSet.has(unlockedKey(currentUser.id, report.id));
-          const unlockBlockReason = getUnlockBlockReason(currentUser, report, patientById, clinicById);
+        {patientHistoryReports.map((report) => {
+          const isOwnReport = report.authorClinicId === currentUser.id;
+          const isUnlocked = isOwnReport || unlockedSet.has(unlockedKey(currentUser.id, report.id));
+          const unlockBlockReason = isOwnReport ? null : getUnlockBlockReason(currentUser, report, patientById, clinicById);
           const sharedPayload = getSharedReportPayload(report);
           const viewStatus = viewStatusByReportId[report.id];
 
@@ -727,7 +724,9 @@ export function ViewReportsTab({ currentUser, reports, patients, patientById, cl
             <div key={report.id} className="bg-white rounded-2xl border shadow-sm overflow-hidden">
               <div className="p-5 lg:p-6 bg-slate-50 border-b flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-base lg:text-lg text-slate-700">{ANONYMIZED_LABEL_BY_CLINIC_ID[report.authorClinicId] ?? 'Contributor'}</span>
+                  <span className="font-bold text-base lg:text-lg text-slate-700">
+                    {isOwnReport ? 'Your Clinic' : ANONYMIZED_LABEL_BY_CLINIC_ID[report.authorClinicId] ?? 'Contributor'}
+                  </span>
                   <span className="text-xs text-slate-400">&bull;</span>
                   <span className="text-sm text-slate-400">{formatReportVisitDate(report)}</span>
                   <span className="text-xs text-slate-400">&bull;</span>
@@ -814,8 +813,10 @@ export function ViewReportsTab({ currentUser, reports, patients, patientById, cl
                     </div>
 
                     <div className="pt-4 border-t flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-xs text-slate-400 uppercase font-bold tracking-wide">
-                      <span>Unlocked Content</span>
-                      <span className="text-blue-500 italic">Judgement-safe: structured capsule, origin hidden.</span>
+                      <span>{isOwnReport ? 'Local Clinic Record' : 'Unlocked Content'}</span>
+                      <span className="text-blue-500 italic">
+                        {isOwnReport ? 'Your clinic authored this record.' : 'Judgement-safe: structured capsule, origin hidden.'}
+                      </span>
                     </div>
                   </div>
                 )}
