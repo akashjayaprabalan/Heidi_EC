@@ -22,6 +22,9 @@ import {
   SEEDED_REPORTS,
   settleReportUnlock,
   snapshotToString,
+  syncReportSharedCounts,
+  syncSeedClinics,
+  syncSeedReports,
   toRecordById,
   type UnlockedReport,
   unlockedKey,
@@ -77,9 +80,12 @@ function App() {
         }
 
         if (snapshot) {
+          const syncedReports = syncSeedReports(snapshot.reports);
+          const syncedClinics = syncSeedClinics(snapshot.clinics);
+
           lastSavedSnapshotRef.current = snapshotToString(snapshot);
-          setClinics(snapshot.clinics);
-          setReports(snapshot.reports);
+          setClinics(syncReportSharedCounts(syncedClinics, syncedReports));
+          setReports(syncedReports);
           setLedger(snapshot.ledger);
           setUnlockedReports(snapshot.unlockedReports);
         }

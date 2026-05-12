@@ -1,3 +1,5 @@
+import { SEED_REPORT_ROWS } from './seedData';
+
 export type ReportTier = 'Private' | 'Capsule' | 'Summary' | 'Full';
 
 export interface ContinuityCapsule {
@@ -135,7 +137,7 @@ export const VIEW_COST = 10;
 export const SEED_CLINICS: Clinic[] = [
   { id: 'c1', name: 'Harbour Physio', username: 'harbour', optedIn: true, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
   { id: 'c2', name: 'Peak Performance', username: 'peak', optedIn: true, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
-  { id: 'c3', name: 'City Sports Rehab', username: 'city', optedIn: false, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
+  { id: 'c3', name: 'City Sports Rehab', username: 'city', optedIn: true, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
   { id: 'c4', name: 'Northside Physio', username: 'north', optedIn: true, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
   { id: 'c5', name: 'Bayside Movement', username: 'bayside', optedIn: true, credits: INITIAL_CREDITS, reportsShared: 0, reportsViewed: 0 },
 ];
@@ -143,14 +145,14 @@ export const SEED_CLINICS: Clinic[] = [
 export const SEED_PATIENTS: Patient[] = [
   { id: 'p1', name: 'Sam Lee', homeClinicId: 'c1', consent: true },
   { id: 'p2', name: 'Maya Patel', homeClinicId: 'c1', consent: true },
-  { id: 'p3', name: 'Jordan Kim', homeClinicId: 'c2', consent: true },
-  { id: 'p4', name: 'Ava Chen', homeClinicId: 'c2', consent: true },
-  { id: 'p5', name: 'Noah Singh', homeClinicId: 'c3', consent: false },
+  { id: 'p3', name: 'Jordan Kim', homeClinicId: 'c1', consent: true },
+  { id: 'p4', name: 'Ava Chen', homeClinicId: 'c1', consent: true },
+  { id: 'p5', name: 'Noah Singh', homeClinicId: 'c3', consent: true },
   { id: 'p6', name: 'Priya Rao', homeClinicId: 'c3', consent: true },
-  { id: 'p7', name: 'Ethan Park', homeClinicId: 'c4', consent: true },
-  { id: 'p8', name: 'Sofia Gomez', homeClinicId: 'c4', consent: false },
-  { id: 'p9', name: 'Liam Walker', homeClinicId: 'c5', consent: true },
-  { id: 'p10', name: 'Zara Ali', homeClinicId: 'c5', consent: true },
+  { id: 'p7', name: 'Ethan Park', homeClinicId: 'c3', consent: true },
+  { id: 'p8', name: 'Sofia Gomez', homeClinicId: 'c4', consent: true },
+  { id: 'p9', name: 'Liam Walker', homeClinicId: 'c4', consent: true },
+  { id: 'p10', name: 'Zara Ali', homeClinicId: 'c2', consent: true },
 ];
 
 export const DEMO_PASSWORDS: Record<string, string> = {
@@ -161,72 +163,70 @@ export const DEMO_PASSWORDS: Record<string, string> = {
   bayside: 'bayside123',
 };
 
-export const SEEDED_REPORTS: Report[] = (() => {
-  const now = Date.now();
+const SOURCE_CLINIC_ID_BY_NAME: Record<string, string> = {
+  'Harbour Physio (Me)': 'c1',
+  'Peak Performance': 'c2',
+  'City Sports Rehab': 'c3',
+  'Northside Physio': 'c4',
+  'Bayside Movement': 'c5',
+};
 
-  return [
-    {
-      id: 'r1',
-      patientId: 'p1',
-      authorClinicId: 'c1',
-      tier: 'Capsule',
-      notes: 'Private local note: patient showing good progress on ACL recovery. Range of motion improved by 15 degrees. Detailed exercise adherence and clinician reasoning stay inside Harbour.',
-      capsule: {
-        status: 'ACL recovery progressing; knee range improved by 15 degrees.',
-        interventions: 'Strength progression, gait retraining, and supervised return-to-run drills.',
-        risks: 'Avoid cutting drills until swelling remains settled for 72 hours.',
-        nextStep: 'Continue graded loading and reassess hop tolerance next visit.',
-      },
-      reportType: 'ACL Progress Note',
-      timestamp: now - 86_400_000,
-    },
-    {
-      id: 'r2',
-      patientId: 'p3',
-      authorClinicId: 'c2',
-      tier: 'Capsule',
-      notes: 'Private local note: shoulder impingement persists. Patient frustrated by overhead work. Full treatment reasoning is visible only to Peak unless full detail is explicitly shared.',
-      capsule: {
-        status: 'Shoulder impingement persists with overhead aggravation.',
-        interventions: 'Shifted program toward eccentric loading and scapular control.',
-        risks: 'Pain spikes above 6/10 after overhead sessions should trigger regression.',
-        nextStep: 'Review load tolerance after two weeks before returning to throwing.',
-      },
-      reportType: 'Shoulder Continuity Capsule',
-      timestamp: now - 172_800_000,
-    },
-    {
-      id: 'r3',
-      patientId: 'p6',
-      authorClinicId: 'c3',
-      tier: 'Full',
-      notes: 'Complex lower back pain history. Full MRI details attached (simulated). Daily exercises required.',
-      capsule: {
-        status: 'Complex lower back pain with recurring morning stiffness.',
-        interventions: 'Daily mobility, graded core loading, and education on flare pacing.',
-        risks: 'Escalating neurological symptoms require medical review.',
-        nextStep: 'Coordinate exercise plan with next treating physio if patient attends elsewhere.',
-      },
-      reportType: 'Lumbar Full Detail',
-      timestamp: now - 259_200_000,
-    },
-    {
-      id: 'r4',
-      patientId: 'p7',
-      authorClinicId: 'c4',
-      tier: 'Capsule',
-      notes: 'Private local note: ankle sprain Grade II. Standard RICE protocol followed for 1 week. Manual therapy notes stay local.',
-      capsule: {
-        status: 'Grade II ankle sprain; swelling reduced after first week.',
-        interventions: 'Compression, range work, and progressive balance drills.',
-        risks: 'Delay running if lateral hop remains painful.',
-        nextStep: 'Progress proprioception and retest single-leg stability.',
-      },
-      reportType: 'Ankle Capsule',
-      timestamp: now - 345_600_000,
-    },
-  ];
-})();
+const PATIENT_ID_BY_NAME = SEED_PATIENTS.reduce<Record<string, string>>((acc, patient) => {
+  acc[patient.name] = patient.id;
+  return acc;
+}, {});
+
+const REPORT_SECTION_LABELS = 'Presenting complaint|Subjective|Objective|Assessment|Treatment provided|Plan';
+
+function getSourceClinicId(clinicName: string): string {
+  const clinicId = SOURCE_CLINIC_ID_BY_NAME[clinicName];
+  if (!clinicId) {
+    throw new Error(`Unknown seed clinic: ${clinicName}`);
+  }
+
+  return clinicId;
+}
+
+function getPatientId(patientName: string): string {
+  const patientId = PATIENT_ID_BY_NAME[patientName];
+  if (!patientId) {
+    throw new Error(`Unknown seed patient: ${patientName}`);
+  }
+
+  return patientId;
+}
+
+function extractReportSection(reportBody: string, section: string): string {
+  const match = reportBody.match(new RegExp(`${section}:\\s*([\\s\\S]*?)(?=\\n(?:${REPORT_SECTION_LABELS}):|$)`, 'i'));
+  return match?.[1]?.trim() ?? '';
+}
+
+function buildSeedCapsule(reportBody: string, summary: string): ContinuityCapsule {
+  return {
+    status: summary,
+    interventions: extractReportSection(reportBody, 'Treatment provided') || 'See full report for treatment details.',
+    risks: extractReportSection(reportBody, 'Assessment') || 'No network-visible clinical watch-outs recorded.',
+    nextStep: extractReportSection(reportBody, 'Plan') || 'Continue care using the shared report context.',
+  };
+}
+
+function getVisitTimestamp(visitDate: string): number {
+  const timestamp = new Date(`${visitDate}T12:00:00`).getTime();
+  return Number.isNaN(timestamp) ? Date.now() : timestamp;
+}
+
+export const SEEDED_REPORTS: Report[] = SEED_REPORT_ROWS.map((row) => ({
+  id: `r${row.reportNumber}`,
+  patientId: getPatientId(row.patient),
+  authorClinicId: getSourceClinicId(row.clinic),
+  tier: 'Full',
+  notes: row.reportBody,
+  capsule: buildSeedCapsule(row.reportBody, row.summary),
+  summary: row.summary,
+  reportType: row.reportType,
+  visitDate: row.date,
+  timestamp: getVisitTimestamp(row.date),
+}));
 
 export const PATIENTS = SEED_PATIENTS;
 export const PATIENT_BY_ID = toRecordById(PATIENTS);
@@ -244,18 +244,44 @@ export function toRecordById<T extends { id: string }>(items: readonly T[]): Rec
 }
 
 export function buildInitialClinics(): Clinic[] {
-  const sharedCounts = SEEDED_REPORTS.reduce<Record<string, number>>((acc, report) => {
-    if (isReportSharedToNetwork(report, PATIENT_BY_ID, SEED_CLINIC_BY_ID)) {
+  return syncReportSharedCounts(SEED_CLINICS, SEEDED_REPORTS);
+}
+
+export function syncReportSharedCounts(clinics: readonly Clinic[], reports: readonly Report[]): Clinic[] {
+  const clinicById = toRecordById(clinics);
+  const sharedCounts = reports.reduce<Record<string, number>>((acc, report) => {
+    if (isReportSharedToNetwork(report, PATIENT_BY_ID, clinicById)) {
       acc[report.authorClinicId] = (acc[report.authorClinicId] ?? 0) + 1;
     }
 
     return acc;
   }, {});
 
-  return SEED_CLINICS.map((clinic) => ({
+  return clinics.map((clinic) => ({
     ...clinic,
-    reportsShared: sharedCounts[clinic.id] ?? clinic.reportsShared ?? 0,
+    reportsShared: sharedCounts[clinic.id] ?? 0,
   }));
+}
+
+export function syncSeedClinics(clinics: readonly Clinic[]): Clinic[] {
+  const clinicById = toRecordById(clinics);
+
+  return SEED_CLINICS.map((seedClinic) => {
+    const existingClinic = clinicById[seedClinic.id];
+
+    return {
+      ...seedClinic,
+      credits: existingClinic?.credits ?? seedClinic.credits,
+      reportsViewed: existingClinic?.reportsViewed ?? seedClinic.reportsViewed,
+    };
+  });
+}
+
+export function syncSeedReports(reports: readonly Report[]): Report[] {
+  const seedReportIds = new Set(SEEDED_REPORTS.map((report) => report.id));
+  const customReports = reports.filter((report) => !seedReportIds.has(report.id));
+
+  return [...SEEDED_REPORTS, ...customReports];
 }
 
 export function snapshotToString(snapshot: AppSnapshot): string {
@@ -347,6 +373,21 @@ export function isReportSharedToNetwork(
     patientById[report.patientId],
     report.tier,
   ) === null;
+}
+
+export function getPatientHistoryReports(
+  reports: readonly Report[],
+  patientId: string,
+  patientById: Record<string, Patient>,
+  clinicById: Record<string, Clinic>,
+): Report[] {
+  return reports
+    .filter(
+      (report) =>
+        report.patientId === patientId &&
+        isReportSharedToNetwork(report, patientById, clinicById),
+    )
+    .sort((a, b) => a.timestamp - b.timestamp);
 }
 
 export function getReportCapsule(report: Report): ContinuityCapsule {
