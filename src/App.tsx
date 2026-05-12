@@ -1,47 +1,51 @@
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ActiveTab, CreateReportInput, CreateReportResult, ViewReportResult } from './appTypes';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { FormEvent } from 'react';
 import {
+  ANONYMIZED_LABEL_BY_CLINIC_ID,
+  type ActiveTab,
+  type AppSnapshot,
+  buildInitialClinics,
+  type Clinic,
+  type CreateReportInput,
+  type CreateReportResult,
+  DEMO_PASSWORDS,
+  getReportSharingBlockReason,
+  getReportTierLabel,
   getSafePatientRef,
+  getUnlockBlockReason,
+  type LedgerEntry,
+  LedgerEventType,
   makeId,
+  PATIENT_BY_ID,
+  PATIENTS,
+  type Report,
+  SEEDED_REPORTS,
+  settleReportUnlock,
   snapshotToString,
+  syncReportSharedCounts,
+  syncSeedClinics,
+  syncSeedReports,
+  toRecordById,
+  type UnlockedReport,
   unlockedKey,
-} from './appHelpers';
+  type ViewReportResult,
+  VIEW_COST,
+} from './domain';
+import {
+  AppShell,
+  CreateReportTab,
+  LeaderboardTab,
+  LedgerTab,
+  LoginScreen,
+  SettingsTab,
+  ViewReportsTab,
+  WalkthroughTab,
+} from './ui';
 import {
   canUseSupabaseSnapshotStore,
   loadAppSnapshot,
   saveAppSnapshot,
-} from './appSnapshotStore';
-import { CreateReportTab } from './CreateReportTab';
-import { VIEW_COST } from './constants';
-import {
-  ANONYMIZED_LABEL_BY_CLINIC_ID,
-  buildInitialClinics,
-  DEMO_PASSWORDS,
-  PATIENT_BY_ID,
-  PATIENTS,
-  SEEDED_REPORTS,
-} from './demoData';
-import {
-  getReportTierLabel,
-  getUnlockBlockReason,
-  settleReportUnlock,
-} from './incentives';
-import { LeaderboardTab } from './LeaderboardTab';
-import { LedgerTab } from './LedgerTab';
-import { LoginScreen } from './LoginScreen';
-import { SettingsTab } from './SettingsTab';
-import { Sidebar } from './Sidebar';
-import { getReportSharingBlockReason, toRecordById } from './sharing';
-import { LedgerEventType } from './types';
-import type {
-  AppSnapshot,
-  Clinic,
-  LedgerEntry,
-  Report,
-  UnlockedReport,
-} from './types';
-import { ViewReportsTab } from './ViewReportsTab';
-import { WalkthroughTab } from './WalkthroughTab';
+} from './persistence';
 
 const SUPABASE_SAVE_DEBOUNCE_MS = 300;
 const ACTIVE_TAB_DEFAULT: ActiveTab = 'walkthrough';
@@ -76,9 +80,12 @@ function App() {
         }
 
         if (snapshot) {
+          const syncedReports = syncSeedReports(snapshot.reports);
+          const syncedClinics = syncSeedClinics(snapshot.clinics);
+
           lastSavedSnapshotRef.current = snapshotToString(snapshot);
-          setClinics(snapshot.clinics);
-          setReports(snapshot.reports);
+          setClinics(syncReportSharedCounts(syncedClinics, syncedReports));
+          setReports(syncedReports);
           setLedger(snapshot.ledger);
           setUnlockedReports(snapshot.unlockedReports);
         }
@@ -358,73 +365,51 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-white border-b px-6 md:px-8 lg:px-10 py-4 lg:py-5 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-sm">K</div>
-          <h1 className="text-xl lg:text-2xl font-black tracking-tight text-slate-800">Kinetic</h1>
-        </div>
-        <div className="flex items-center gap-5">
-          <div className="text-right">
-            <div className="text-base lg:text-lg font-bold text-slate-800">{currentUser.name}</div>
-            <div className={`text-xs font-black uppercase tracking-wide ${currentUser.optedIn ? 'text-green-600' : 'text-red-500'}`}>
-              {currentUser.optedIn ? 'Network Active' : 'Network Off'}
-            </div>
-          </div>
-          <div className="h-12 w-px bg-slate-100" />
-          <div className="flex flex-col items-center">
-            <span className="text-xs uppercase font-bold tracking-wide text-slate-400">Balance</span>
-            <span className={`text-2xl font-black leading-none ${currentUser.credits < VIEW_COST ? 'text-red-500' : 'text-blue-600'}`}>
-              {currentUser.credits}
-            </span>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex flex-1">
-        <Sidebar activeTab={activeTab} onTabChange={setActiveTab} onLogout={handleLogout} />
-        <div className="flex-1 bg-slate-50/50 min-h-[calc(100vh-88px)] overflow-x-auto">
-          {activeTab === 'walkthrough' && (
-            <WalkthroughTab
-              clinics={clinics}
-              reports={reports}
-              currentUser={currentUser}
-              onTabChange={setActiveTab}
-            />
-          )}
-          {activeTab === 'settings' && (
-            <SettingsTab currentUser={currentUser} onToggleOptIn={handleToggleOptIn} />
-          )}
-          {activeTab === 'create' && (
-            <CreateReportTab
-              currentUser={currentUser}
-              patients={PATIENTS}
-              patientById={PATIENT_BY_ID}
-              reports={reports}
-              onCreateReport={handleCreateReport}
-            />
-          )}
-          {activeTab === 'view' && (
-            <ViewReportsTab
-              currentUser={currentUser}
-              reports={reports}
-              patients={PATIENTS}
-              patientById={PATIENT_BY_ID}
-              clinicById={clinicById}
-              unlockedSet={unlockedSet}
-              onViewReport={handleViewReport}
-            />
-          )}
-          {activeTab === 'leaderboard' && (
-            <LeaderboardTab
-              clinics={clinics}
-              currentUserId={currentUser.id}
-            />
-          )}
-          {activeTab === 'ledger' && <LedgerTab ledger={ledger} />}
-        </div>
-      </main>
-    </div>
+    <AppShell
+      currentUser={currentUser}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      onLogout={handleLogout}
+    >
+      {activeTab === 'walkthrough' && (
+        <WalkthroughTab
+          clinics={clinics}
+          reports={reports}
+          currentUser={currentUser}
+          onTabChange={setActiveTab}
+        />
+      )}
+      {activeTab === 'settings' && (
+        <SettingsTab currentUser={currentUser} onToggleOptIn={handleToggleOptIn} />
+      )}
+      {activeTab === 'create' && (
+        <CreateReportTab
+          currentUser={currentUser}
+          patients={PATIENTS}
+          patientById={PATIENT_BY_ID}
+          reports={reports}
+          onCreateReport={handleCreateReport}
+        />
+      )}
+      {activeTab === 'view' && (
+        <ViewReportsTab
+          currentUser={currentUser}
+          reports={reports}
+          patients={PATIENTS}
+          patientById={PATIENT_BY_ID}
+          clinicById={clinicById}
+          unlockedSet={unlockedSet}
+          onViewReport={handleViewReport}
+        />
+      )}
+      {activeTab === 'leaderboard' && (
+        <LeaderboardTab
+          clinics={clinics}
+          currentUserId={currentUser.id}
+        />
+      )}
+      {activeTab === 'ledger' && <LedgerTab ledger={ledger} />}
+    </AppShell>
   );
 }
 

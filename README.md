@@ -2,15 +2,13 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# Product Growth Heidi
 
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/49af065b-86b3-4cc2-a7d5-7576337580b5
+This is the simplified standalone version of the Kinetic prototype. It keeps the same UI/UX and system behavior as the original app while using a smaller source architecture.
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+**Prerequisites:** Node.js
 
 1. Install dependencies:
    `npm install`
@@ -21,7 +19,7 @@ View your app in AI Studio: https://ai.studio/apps/49af065b-86b3-4cc2-a7d5-75763
 
 ## Supabase (optional, for persistence)
 
-This repo now supports a minimal Supabase-backed snapshot store. Without Supabase, it still runs as an in-memory demo.
+This app supports the same minimal Supabase-backed snapshot store as the original. Without Supabase, it still runs as an in-memory demo.
 
 1. Create a Supabase project.
 2. In Supabase SQL Editor, run `supabase/schema.sql`.

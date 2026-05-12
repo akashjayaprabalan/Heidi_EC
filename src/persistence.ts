@@ -1,12 +1,28 @@
-import { AppSnapshot } from './types';
-import { SUPABASE_SNAPSHOT_ID, isSupabaseConfigured, supabase } from './supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+import type { AppSnapshot } from './domain';
 
+type ViteImportMeta = ImportMeta & {
+  env: Record<string, string | undefined>;
+};
+
+const env = (import.meta as ViteImportMeta).env;
+const supabaseUrl = env.VITE_SUPABASE_URL?.trim();
+const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY?.trim();
 const SNAPSHOT_TABLE = 'app_snapshots';
 
 type SnapshotRow = {
   id: string;
   data: unknown;
 };
+
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+export const SUPABASE_SNAPSHOT_ID = env.VITE_SUPABASE_SNAPSHOT_ID?.trim() || 'kinetic-demo';
+
+export const supabase = isSupabaseConfigured
+  ? createClient(supabaseUrl!, supabaseAnonKey!, {
+      auth: { persistSession: false },
+    })
+  : null;
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
