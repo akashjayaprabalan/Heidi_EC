@@ -5,7 +5,14 @@ import {
   getUnlockBlockReason,
   INITIAL_CREDITS,
   isReportSharedToNetwork,
+  PATIENT_BY_ID,
+  SEEDED_REPORTS,
+  SEED_CLINICS,
+  SEED_PATIENTS,
   settleReportUnlock,
+  syncReportSharedCounts,
+  syncSeedClinics,
+  syncSeedReports,
   toRecordById,
   VIEW_COST,
 } from './domain';
@@ -120,5 +127,68 @@ describe('sharing rules', () => {
   it('blocks private reports even when the author and patient are eligible', () => {
     expect(isReportSharedToNetwork(makeReport({ tier: 'Private' }), sharingPatientById, clinicById)).toBe(false);
     expect(getReportSharingBlockReason(clinicById.c1, sharingPatientById.p1, 'Private')).toBe('Private Tier Selected');
+  });
+});
+
+describe('seed data coverage', () => {
+  const seedClinicById = toRecordById(SEED_CLINICS);
+
+  it('imports all twenty original CSV reports as full-detail records', () => {
+    expect(SEEDED_REPORTS).toHaveLength(20);
+    expect(SEEDED_REPORTS.every((report) => report.tier === 'Full')).toBe(true);
+    expect(SEEDED_REPORTS.map((report) => report.id)).toEqual(
+      Array.from({ length: 20 }, (_, index) => `r${index + 1}`),
+    );
+  });
+
+  it('uses the initial assessment clinic as each patient home clinic', () => {
+    expect(SEED_PATIENTS.find((patient) => patient.name === 'Jordan Kim')?.homeClinicId).toBe('c1');
+    expect(SEED_PATIENTS.find((patient) => patient.name === 'Liam Walker')?.homeClinicId).toBe('c4');
+    expect(SEED_PATIENTS.find((patient) => patient.name === 'Zara Ali')?.homeClinicId).toBe('c2');
+    expect(SEED_PATIENTS.every((patient) => patient.consent)).toBe(true);
+  });
+
+  it('includes an external shared report for Liam Walker', () => {
+    const liamReports = SEEDED_REPORTS.filter((report) => report.patientId === 'p9');
+
+    expect(liamReports).toHaveLength(2);
+    expect(
+      liamReports.some(
+        (report) =>
+          report.authorClinicId !== 'c1' &&
+          isReportSharedToNetwork(report, PATIENT_BY_ID, seedClinicById),
+      ),
+    ).toBe(true);
+  });
+
+  it('replaces stale seeded reports in persisted snapshots while keeping custom reports', () => {
+    const customReport = makeReport({ id: 'custom-report', reportType: 'Custom note' });
+    const syncedReports = syncSeedReports([
+      makeReport({ id: 'r1', notes: 'stale seed note', reportType: 'Stale note' }),
+      customReport,
+    ]);
+
+    expect(syncedReports).toHaveLength(21);
+    expect(syncedReports.find((report) => report.id === 'r1')?.notes).toBe(SEEDED_REPORTS[0]?.notes);
+    expect(syncedReports.find((report) => report.id === 'custom-report')).toEqual(customReport);
+  });
+
+  it('updates persisted clinic roster settings from the current seeds', () => {
+    const syncedClinics = syncSeedClinics([
+      { id: 'c3', name: 'Old City', username: 'old-city', optedIn: false, credits: 35, reportsShared: 99, reportsViewed: 2 },
+    ]);
+    const city = syncedClinics.find((clinic) => clinic.id === 'c3');
+
+    expect(city?.name).toBe('City Sports Rehab');
+    expect(city?.username).toBe('city');
+    expect(city?.optedIn).toBe(true);
+    expect(city?.credits).toBe(35);
+    expect(city?.reportsViewed).toBe(2);
+  });
+
+  it('syncs clinic shared counts from the current report set', () => {
+    const clinicsWithCounts = syncReportSharedCounts(SEED_CLINICS, SEEDED_REPORTS);
+
+    expect(clinicsWithCounts.map((clinic) => clinic.reportsShared)).toEqual([4, 4, 4, 4, 4]);
   });
 });
