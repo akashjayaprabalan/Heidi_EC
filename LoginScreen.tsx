@@ -6,11 +6,12 @@ import type { Clinic } from './types';
 type LoginScreenProps = {
   clinics: Clinic[];
   onLogin: (e: FormEvent<HTMLFormElement>) => void;
+  loginError?: string | null;
 };
 
 type LoginViewMode = 'login' | 'leaderboard';
 
-export function LoginScreen({ clinics, onLogin }: LoginScreenProps) {
+export function LoginScreen({ clinics, onLogin, loginError }: LoginScreenProps) {
   const [viewMode, setViewMode] = useState<LoginViewMode>('login');
   const leaderboardRows = useMemo(() => buildLeaderboardRows(clinics), [clinics]);
 
@@ -53,6 +54,11 @@ export function LoginScreen({ clinics, onLogin }: LoginScreenProps) {
           <div className="bg-white rounded-2xl shadow-2xl p-10 md:p-12 w-full max-w-xl">
             <h2 className="text-2xl font-bold mb-8 text-slate-800 text-center">Sign-in</h2>
             <form onSubmit={onLogin} className="space-y-5">
+              {loginError && (
+                <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm font-semibold text-red-700">
+                  {loginError}
+                </div>
+              )}
               <div>
                 <label className="block text-base font-medium text-slate-700 mb-2">Username</label>
                 <input
