@@ -31,10 +31,9 @@ import {
   getUnlockBlockReason,
   settleReportUnlock,
 } from './incentives';
-import { calculateAdoptionOutcome } from './adoption';
 
-type ActiveTab = 'walkthrough' | 'settings' | 'create' | 'view' | 'leaderboard' | 'ledger' | 'adoption';
-type IconName = 'compass' | 'settings' | 'plus' | 'search' | 'trending-up' | 'file-text' | 'lock' | 'target';
+type ActiveTab = 'walkthrough' | 'settings' | 'create' | 'view' | 'leaderboard' | 'ledger';
+type IconName = 'compass' | 'settings' | 'plus' | 'search' | 'trending-up' | 'file-text' | 'lock';
 
 type CreateReportInput = {
   patientId: string;
@@ -58,7 +57,6 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'view', label: 'View Reports', icon: 'search' },
   { id: 'leaderboard', label: 'Leaderboard', icon: 'trending-up' },
   { id: 'ledger', label: 'Ledger', icon: 'file-text' },
-  { id: 'adoption', label: '80% Simulator', icon: 'target' },
 ];
 
 const SUPABASE_SAVE_DEBOUNCE_MS = 300;
@@ -261,14 +259,6 @@ const Icon = memo(function Icon({ name }: { name: IconName }) {
           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
         </svg>
       );
-    case 'target':
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <circle cx="12" cy="12" r="6" />
-          <circle cx="12" cy="12" r="2" />
-        </svg>
-      );
     default:
       return null;
   }
@@ -385,83 +375,7 @@ function WalkthroughTab({ clinics, reports, currentUser, onTabChange }: Walkthro
             <button type="button" onClick={() => onTabChange('view')} className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold">
               Request History
             </button>
-            <button type="button" onClick={() => onTabChange('adoption')} className="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold">
-              Show 80% Path
-            </button>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AdoptionSimulatorTab() {
-  const [accessGate, setAccessGate] = useState(75);
-  const [trustConversion, setTrustConversion] = useState(52.4);
-  const outcome = useMemo(
-    () =>
-      calculateAdoptionOutcome({
-        accessGateConversionRate: accessGate / 100,
-        trustConversionRate: trustConversion / 100,
-      }),
-    [accessGate, trustConversion],
-  );
-
-  return (
-    <div className="p-6 md:p-8 lg:p-10 max-w-7xl">
-      <div className="mb-8">
-        <div className="text-sm font-black uppercase tracking-wide text-blue-600 mb-2">80% adoption simulator</div>
-        <h2 className="text-3xl lg:text-5xl font-black text-slate-900">From 19% sharing to {formatPercent(outcome.finalOptInRate)} opt-in</h2>
-        <p className="mt-4 max-w-3xl text-lg text-slate-600 leading-relaxed">
-          The model separates desire from action. Clinics already want to receive history; Kinetic makes receiving conditional on participation, then reduces the remaining fear with capsules and anonymous contribution accounting.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6">
-        <div className="bg-white border rounded-2xl p-6 shadow-sm space-y-6">
-          <div>
-            <label className="block text-sm font-black uppercase tracking-wide text-slate-400 mb-3">
-              Receiver-only clinics converted by access gate: {accessGate}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={accessGate}
-              onChange={(event) => setAccessGate(Number(event.target.value))}
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-black uppercase tracking-wide text-slate-400 mb-3">
-              Remaining holdouts converted by trust controls: {trustConversion.toFixed(1)}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="0.1"
-              value={trustConversion}
-              onChange={(event) => setTrustConversion(Number(event.target.value))}
-              className="w-full"
-            />
-          </div>
-          <div className="rounded-2xl bg-blue-50 border border-blue-100 p-5">
-            <div className="text-xs font-black uppercase tracking-wide text-blue-500">Projected network</div>
-            <div className="text-5xl font-black text-blue-700 mt-2">{outcome.finalOptedInClinics}</div>
-            <div className="text-sm text-blue-700 mt-1">of {outcome.totalClinics} clinics opted in</div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {outcome.stages.map((stage) => (
-            <div key={stage.label} className="bg-white border rounded-2xl p-6 shadow-sm flex flex-col min-h-[260px]">
-              <div className="text-xs font-black uppercase tracking-wide text-slate-400">{stage.label}</div>
-              <div className="text-5xl font-black text-slate-900 mt-5">{formatPercent(stage.optInRate)}</div>
-              <div className="text-sm text-slate-500 mt-1">{stage.optedInClinics} clinics</div>
-              <p className="text-sm text-slate-600 leading-relaxed mt-auto">{stage.explanation}</p>
-            </div>
-          ))}
         </div>
       </div>
     </div>
@@ -1362,7 +1276,6 @@ function App() {
             />
           )}
           {activeTab === 'ledger' && <LedgerTab ledger={ledger} />}
-          {activeTab === 'adoption' && <AdoptionSimulatorTab />}
         </div>
       </main>
     </div>
