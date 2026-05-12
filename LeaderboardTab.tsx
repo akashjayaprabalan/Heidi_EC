@@ -16,7 +16,7 @@ export function LeaderboardTab({ clinics, currentUserId }: LeaderboardTabProps) 
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
         <h2 className="text-3xl lg:text-4xl font-bold text-slate-800">Leaderboard</h2>
         <div className="bg-white border rounded-2xl p-5 max-w-md text-sm leading-snug text-slate-500">
-          Ranked by remaining credits.
+          Ranked by contribution score: opt-in status, useful shared reports, and credits earned from other clinics.
         </div>
       </div>
 

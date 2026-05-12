@@ -16,6 +16,8 @@ View your app in AI Studio: https://ai.studio/apps/49af065b-86b3-4cc2-a7d5-75763
    `npm install`
 2. Run the app:
    `npm run dev`
+3. Validate the app before shipping:
+   `npm run check`
 
 ## Supabase (optional, for persistence)
 
