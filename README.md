@@ -13,14 +13,17 @@ This is the simplified standalone version of the Kinetic prototype. It keeps the
    `npm run dev`
 3. Validate the app before shipping:
    `npm run check`
+
+   
 ## Login Credentials
 
-Clinic   	         Username	      Password
-Harbour Physio	      harbour	      harbour123
-Peak Performance   	peak	         peak123
-City Sports Rehab   	city	         city123
-Northside Physio	   north	         north123
-Bayside Movement	   bayside	      bayside123
+| Clinic               | Username | Password   |
+|----------------------|----------|------------|
+| Harbour Physio       | harbour  | harbour123 |
+| Peak Performance     | peak     | peak123    |
+| City Sports Rehab    | city     | city123    |
+| Northside Physio     | north    | north123   |
+| Bayside Movement     | bayside  | bayside123 |
 
 
 ## Supabase (optional, for persistence)
